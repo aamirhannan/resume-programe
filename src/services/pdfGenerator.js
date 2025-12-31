@@ -23,6 +23,13 @@ export const createPDF = async (resumeData) => {
         // 3. Set Content
         await page.setContent(html, { waitUntil: 'networkidle0' });
 
+        // Wait for Layout Normalizer to finish
+        try {
+            await page.waitForSelector('body[data-normalized="true"]', { timeout: 2000 });
+        } catch (e) {
+            console.warn('Layout normalizer timed out, proceeding with default render.');
+        }
+
         // 4. Generate PDF
         const pdfBuffer = await page.pdf({
             format: 'A4',

@@ -46,6 +46,11 @@ export const generateResumePDF = async (req, res) => {
     try {
         const { role, jobDescription } = req.body;
 
+        // console.log("jobDescription", jobDescription);
+        // console.log("role", role);
+        // console.log("resumeData", resumeData);
+
+        // Pipeline mode
         if (!role) {
             return res.status(400).json({ error: 'Role is required' });
         }
@@ -64,15 +69,13 @@ export const generateResumePDF = async (req, res) => {
             jobDescription
         });
 
-        const optimizedResume = result.optimizedResume;
-
         // Generate PDF
-        const pdfBuffer = await createPDF(optimizedResume);
+        const pdfBuffer = await createPDF(result.optimizedResume);
 
         res.set({
             'Content-Type': 'application/pdf',
             'Content-Length': pdfBuffer.length,
-            'Content-Disposition': `attachment; filename="Resume_${role}_Optimized.pdf"`,
+            'Content-Disposition': `attachment; filename="Resume_${role || 'Optimized'}.pdf"`,
         });
 
         res.send(pdfBuffer);

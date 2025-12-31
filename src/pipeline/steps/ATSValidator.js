@@ -19,7 +19,9 @@ export class ATSValidator extends Step {
                 atsScore,
                 totalSignals,
                 matchedCount,
-                missingSignals: evidence.missing
+                matchedCount,
+                missingSignals: evidence.missing,
+                signals: signals.details // Debugging: Show extraction details
             }
         };
     }

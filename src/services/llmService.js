@@ -57,14 +57,59 @@ Rewrite with start verb: "${startVerb}"
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userPrompt }
                 ],
-                model: "gpt-3.5-turbo", // Use 3.5-turbo for speed/cost, or 4 for quality
-                temperature: 0.2, // Low temperature for deterministic behavior
+                model: "gpt-5.2",
+                temperature: 0.2,
             });
 
             return completion.choices[0].message.content.trim();
         } catch (error) {
             console.error('LLM Rewrite Error:', error);
-            return bullet; // Fallback to original
+            return bullet;
+        }
+    }
+
+    /**
+     * Extracts IMPLIED technical skills from a Job Description.
+     * @param {string} validSkillsList - List of known ontology skills to map to.
+     * @param {string} jdText - The job description text.
+     * @returns {Promise<string[]>} - List of implied skills found.
+     */
+    async extractImpliedSkills(jdText, validSkillsList) {
+        if (!this.openai) return [];
+
+        const systemPrompt = `You are a Semantic Skill Classifier. 
+Your job is to identify IMPLIED technical skills in a Job Description that might not be explicitly named but are required by context.
+Rules:
+1. Return ONLY concepts that map to the provided "Valid Skills List".
+2. If a skill is explicitly mentioned in the text, IGNORE it (we have regex for that).
+3. Look for phrases like "low-latency systems" (implies C++/Rust/Go) or "containerization" (implies Docker).
+4. Output strict JSON array of strings. e.g. ["docker", "redis"]
+`;
+
+        const userPrompt = `
+Valid Skills List: ${JSON.stringify(validSkillsList)}
+Job Description:
+"${jdText.substring(0, 1500)}" 
+
+Return JSON Array of implied skills:
+`;
+
+        try {
+            const completion = await this.openai.chat.completions.create({
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                model: "gpt-3.5-turbo",
+                temperature: 0.1,
+                response_format: { type: "json_object" }
+            });
+
+            const result = JSON.parse(completion.choices[0].message.content);
+            return result.skills || result.impliedSkills || [];
+        } catch (error) {
+            console.error('LLM Extraction Error:', error);
+            return [];
         }
     }
 }
