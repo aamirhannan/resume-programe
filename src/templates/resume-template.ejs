@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        /* Reset & Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 11pt;
+            /* Standard readable size */
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+            width: 210mm;
+            /* A4 Width */
+            min-height: 297mm;
+            /* A4 Height */
+            margin: 0 auto;
+        }
+
+        /* ATS-Friendly Layout: Single Column */
+        .container {
+            padding: 40px;
+            /* Margins */
+        }
+
+        /* Header */
+        header {
+            text-align: left;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 24pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .contact-info {
+            font-size: 10pt;
+            color: #555;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .contact-info a {
+            color: #555;
+            text-decoration: none;
+        }
+
+        .contact-info span {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        h3 {
+            font-size: 12pt;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #333;
+        }
+
+        .meta {
+            font-size: 10pt;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        p {
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+
+        ul {
+            list-style: disc;
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        /* Skills Table (Clean List) */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 10px;
+            font-size: 10.5pt;
+        }
+
+        .skill-category {
+            font-weight: 600;
+        }
+
+        .skill-list {
+            color: #444;
+        }
+
+        /* Print Optimization */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body {
+                width: 100%;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>
+                <%= header.fullName %>
+            </h1>
+            <div class="contact-info">
+                <% if (header.contact.location) { %> <span>
+                        <%= header.contact.location %>
+                    </span>
+                    <% } %>
+                        <% if (header.contact.phone) { %> <span>
+                                <%= header.contact.phone %>
+                            </span>
+                            <% } %>
+                                <% if (header.contact.email) { %> <span><a href="mailto:<%= header.contact.email %>">
+                                            <%= header.contact.email %>
+                                        </a></span>
+                                    <% } %>
+                                        <% if (header.contact.links) { %>
+                                            <% Object.entries(header.contact.links).forEach(([key, value])=> { %>
+                                                <span><a href="<%= value %>" target="_blank">
+                                                        <%= key.charAt(0).toUpperCase() + key.slice(1) %>
+                                                    </a></span>
+                                                <% }); %>
+                                                    <% } %>
+            </div>
+        </header>
+
+        <!-- Summary -->
+        <% if (professionalSummary) { %>
+            <section>
+                <h2>Professional Summary</h2>
+                <p>
+                    <%= professionalSummary %>
+                </p>
+            </section>
+            <% } %>
+
+                <!-- Skills -->
+                <% if (technicalSkills) { %>
+                    <section>
+                        <h2>Technical Skills</h2>
+                        <% Object.entries(technicalSkills).forEach(([category, skills])=> { %>
+                            <div class="skills-grid">
+                                <div class="skill-category">
+                                    <%= category.replace(/([A-Z])/g, ' $1' ).trim() %>
+                                </div>
+                                <div class="skill-list">
+                                    <%= skills.join(', ') %></div>
+                </div>
+            <% }); %>
+        </section>
+        <% } %>
+
+        <!-- Experience -->
+        <% if (experience && experience.length > 0) { %>
+        <section>
+            <h2>Experience</h2>
+            <% experience.forEach(exp => { %>
+                <div class="job-item">
+                    <h3><%= exp.role %></h3>
+                    <div class="meta">
+                        <span><%= exp.company %></span>
+                        <span><%= exp.duration.start %> - <%= exp.duration.end %></span>
+                    </div>
+                    <!-- Assuming responsibilitiesAndAchievements exists -->
+                    <% if (exp.responsibilitiesAndAchievements) { %>
+                    <ul>
+                        <% exp.responsibilitiesAndAchievements.forEach(point => { %>
+                            <li><%= point %></li>
+                        <% }); %>
+                    </ul>
+                    <% } %>
+                </div>
+            <% }); %>
+        </section>
+        <% } %>
+
+        <!-- Projects -->
+        <% if (projects && projects.length > 0) { %>
+        <section>
+            <h2>Projects</h2>
+            <% projects.forEach(project => { %>
+                <div class="project-item">
+                    <h3><%= project.title %></h3>
+                    <div class="meta">
+                         <!-- Format links correctly if object -->
+                         <% if (project.links) { %>
+                            <span>
+                                <% Object.entries(project.links).forEach(([k, v]) => { %>
+                                    <a href="<%= v %>"><%= k %></a>
+                                <% }) %>
+                            </span>
+                         <% } %>
+                    </div>
+                    <% if (project.description) { %>
+                    <ul>
+                         <% project.description.forEach(desc => { %>
+                            <li><%= desc %></li>
+                         <% }); %>
+                    </ul>
+                    <% } %>
+                    <% if (project.technologyStack) { %>
+                        <p><strong>Tech Stack:</strong> <%= project.technologyStack.join(' , ') %></p>
+                    <% } %>
+                </div>
+            <% }); %>
+        </section>
+        <% } %>
+
+        <!-- Education -->
+        <% if (education) { %>
+        <section>
+            <h2>Education</h2>
+            <div class="education-item">
+                <h3><%= education.degree %></h3>
+                <div class="meta">
+                    <span><%= education.institution %></span>
+                    <span><%= education.duration.start %> - <%= education.duration.end %></span>
+                </div>
+            </div>
+        </section>
+        <% } %>
+
+    </div>
+</body>
+</html>
