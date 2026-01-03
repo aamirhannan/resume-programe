@@ -5,6 +5,8 @@ import { SignalMapper } from '../pipeline/steps/SignalMapper.js';
 import { ResumeRewriter } from '../pipeline/steps/ResumeRewriter.js';
 import { CvWolfATSAnalyzer } from '../pipeline/steps/CvWolfATSAnalyzer.js';
 import { createPDF } from '../services/pdfGenerator.js';
+import { RewriteResumeViaLLM } from '../pipeline/steps/RewriteResumeViaLLM.js';
+import { InsertNewlyCreatedResumePoints } from '../pipeline/steps/InsertNewlyCreatedResumePoints.js';
 
 export const generateResume = async (req, res) => {
     try {
@@ -18,10 +20,11 @@ export const generateResume = async (req, res) => {
 
         // Execute Pipeline
         const pipeline = new Pipeline()
-            .addStep(new JDAnalyzer())
-            .addStep(new SignalMapper())
-            .addStep(new ResumeRewriter())
-            .addStep(new CvWolfATSAnalyzer());
+            .addStep(new RewriteResumeViaLLM())
+        // .addStep(new JDAnalyzer())
+        // .addStep(new SignalMapper())
+        // .addStep(new ResumeRewriter())
+        // .addStep(new CvWolfATSAnalyzer());
 
         const result = await pipeline.execute({
             resume: baseResume,
@@ -30,7 +33,7 @@ export const generateResume = async (req, res) => {
 
         res.json({
             success: true,
-            data: result.optimizedResume,
+            data: result.rewrittenResume,
             meta: result.meta,
             analysis: result.cvWolfAnalysis // Expose the detailed analysis
         });
@@ -56,10 +59,12 @@ export const generateResumePDF = async (req, res) => {
 
         // Execute Pipeline to get optimized data
         const pipeline = new Pipeline()
-            .addStep(new JDAnalyzer())
-            .addStep(new SignalMapper())
-            .addStep(new ResumeRewriter())
-            .addStep(new CvWolfATSAnalyzer());
+            .addStep(new RewriteResumeViaLLM())
+            .addStep(new InsertNewlyCreatedResumePoints())
+        // .addStep(new JDAnalyzer())
+        // .addStep(new SignalMapper())
+        // .addStep(new ResumeRewriter())
+        // .addStep(new CvWolfATSAnalyzer());
 
         const result = await pipeline.execute({
             resume: baseResume,
@@ -70,7 +75,7 @@ export const generateResumePDF = async (req, res) => {
         console.log("result", JSON.stringify(result));
 
         // Generate PDF
-        const pdfBuffer = await createPDF(result.optimizedResume);
+        const pdfBuffer = await createPDF(result.finalResume);
 
         res.set({
             'Content-Type': 'application/pdf',

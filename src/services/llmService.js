@@ -13,6 +13,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 class LLMService {
     constructor() {
         this.openai = null;
+        this.model = "gpt-5.2";
+        this.temperature = 0.2;
 
         // Lazy load OpenAI only if key is present
         if (process.env.OPENAI_API_KEY) {
@@ -21,6 +23,26 @@ class LLMService {
             });
         } else {
             console.warn('⚠️ OPENAI_API_KEY not found in env. LLM features disabled.');
+        }
+    }
+
+    async generateContent(userPrompt, systemPrompt) {
+        if (!this.openai) return userPrompt;
+
+        try {
+            const completion = await this.openai.chat.completions.create({
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                model: this.model,
+                temperature: this.temperature,
+            });
+
+            return completion.choices[0].message.content.trim();
+        } catch (error) {
+            console.error('LLM Generation Error:', error);
+            return null;
         }
     }
 
@@ -100,8 +122,8 @@ Return JSON Array of implied skills:
                     { role: "system", content: systemPrompt },
                     { role: "user", content: userPrompt }
                 ],
-                model: "gpt-3.5-turbo",
-                temperature: 0.1,
+                model: this.model,
+                temperature: this.temperature,
                 response_format: { type: "json_object" }
             });
 
@@ -112,6 +134,30 @@ Return JSON Array of implied skills:
             return [];
         }
     }
+
+    /**
+     * get the hard and soft skill from job description
+     */
+
+    async generateResumeContent(prompt) {
+        try {
+            const completion = await this.openai.chat.completions.create({
+                messages: [
+                    { role: "system", content: prompt },
+                ],
+                model: this.model,
+                temperature: this.temperature,
+                response_format: { type: "json_object" }
+            });
+
+            const result = JSON.parse(completion.choices[0].message.content);
+            return result
+        } catch (error) {
+            console.error('LLM Extraction Error:', error);
+            return [];
+        }
+    }
+
 }
 
 export const llmService = new LLMService();
