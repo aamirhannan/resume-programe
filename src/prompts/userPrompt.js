@@ -644,3 +644,47 @@ console.log("Refinement applied:", result.refinementApplied);
 // 3. Error in phase2 → fallback to phase1 only
 // 4. Complete failure → returns original resume
 */
+
+export const generateCoverLetterPrompt = (resume, jobDescription) => {
+  return `
+You are a professional career coach and expert copywriter. Write a compelling cover letter for the following candidate applying for the detailed job.
+
+CANDIDATE RESUME:
+${JSON.stringify(resume, null, 2)}
+
+JOB DESCRIPTION:
+${jobDescription}
+
+INSTRUCTIONS:
+- Tone: Professional, confident, yet humble and enthusiastic.
+- Structure:
+    1. Hook: Mention the specific role and why you are interested (connect to company mission if visible, otherwise focus on the tech/domain).
+    2. Body Paragraph 1 (Experience): Highlight the most relevant experience from the resume that matches the JD's key requirements. Use metrics.
+    3. Body Paragraph 2 (Skills/Soft Skills): Mention key technical skills and soft skills (like leadership, collaboration) that fit the culture.
+    4. Conclusion: Reiterate interest and call to action (looking forward to interview).
+- formatting: Standard business letter format.
+- constraint: Keep it under 250 words. Do NOT include placeholders like "[Your Name]" -> use the name from the resume.
+
+Output ONLY the body of the email/cover letter text. Do not include specific headers like "From: ..." unless standard for a cover letter document (Date, Dear Hiring Manager, etc. are fine).
+`;
+};
+
+export const generateSubjectLinePrompt = (resume, jobDescription) => {
+  return `
+You are an expert at cold emailing and job applications. Create 3 catchy, professional email subject lines for the following application.
+
+CANDIDATE: ${resume.header?.fullName || 'Candidate'}
+ROLE: (Extract from JD)
+
+JOB DESCRIPTION:
+${jobDescription.substring(0, 500)}...
+
+INSTRUCTIONS:
+- The subject line should be professional but stand out.
+- Format ideas:
+    1. "Application for [Role] - [Name] - [Key Achievement/Skill]"
+    2. "[Role] Application: [Name], [Years] Exp [Tech Stack]"
+    3. "[Name] for [Role] | [Unique Value Prop]"
+- Return ONLY the single BEST subject line. Just one string. No quotes.
+`;
+};

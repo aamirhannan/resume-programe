@@ -11,20 +11,6 @@ export class RewriteResumeViaLLM extends Step {
         const { jobDescription, resume } = context;
         if (!resume) throw new Error('Resume is missing');
 
-        // const {
-        //     professionalSummary,
-        //     technicalSkills,
-        //     jobResponsibilities,
-        //     techStack,
-        //     project
-        // } = resume;
-
-        // const professionalSummary = resume.professionalSummary;
-        // const technicalSkills = resume.technicalSkills;
-        // const responsibilitiesAndAchievements = resume.experience[0].responsibilitiesAndAchievements;
-        // const technologies = resume.experience[0].technologies;
-        // const projects = resume.projects;
-
         const {
             header,
             professionalSummary,
