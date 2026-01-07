@@ -158,6 +158,13 @@ Return JSON Array of implied skills:
         }
     }
 
+    async generateCoverLetter(prompt) {
+        return this.generateContent(prompt, "You are a helpful expert career coach.");
+    }
+
+    async generateSubjectLine(prompt) {
+        return this.generateContent(prompt, "You are a helpful expert career coach.");
+    }
 }
 
 export const llmService = new LLMService();

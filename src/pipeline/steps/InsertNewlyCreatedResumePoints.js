@@ -6,17 +6,10 @@ export class InsertNewlyCreatedResumePoints extends Step {
     }
 
     async execute(context) {
-        const { rewrittenResume, resume } = context;
+        const { rewrittenResume, evidenceBasedRefinementResult } = context;
         if (!rewrittenResume) throw new Error('Resume is missing');
 
-        // const { professionalSummary, projects, responsibilitiesAndAchievements, technicalSkills, technologies } = rewrittenResume;
-
-        const finalResume = rewrittenResume;
-        // finalResume.professionalSummary = professionalSummary;
-        // finalResume.technicalSkills = technicalSkills;
-        // finalResume.experience[0].responsibilitiesAndAchievements = responsibilitiesAndAchievements;
-        // finalResume.experience[0].technologies = technologies;
-        // finalResume.projects = projects;
+        const finalResume = evidenceBasedRefinementResult || rewrittenResume;
 
         return {
             ...context,
