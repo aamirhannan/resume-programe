@@ -17,7 +17,9 @@ class EmailService {
     init() {
         if (process.env.SMTP_EMAIL && process.env.SMTP_PASSWORD) {
             this.transporter = nodemailer.createTransport({
-                service: 'gmail', // Defaulting to gmail based on typical AppPassword usage
+                host: 'smtp.gmail.com',
+                port: 587,
+                secure: false, // use STARTTLS
                 auth: {
                     user: process.env.SMTP_EMAIL,
                     pass: process.env.SMTP_PASSWORD
