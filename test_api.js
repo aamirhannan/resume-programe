@@ -74,8 +74,7 @@ const testApplication = async () => {
         console.log('Target URL:', API_URL);
 
         // Replace with your actual email to see the result, or use a testing inbox
-        const targetEmail = 'waqasbca@gmail.com';
-        // const targetEmail = 'gaurav.p@geeksoft.eu';
+        const targetEmail = 'aamirhannan08@gmail.com';
 
         const requestBody = {
             role: 'fullstack',

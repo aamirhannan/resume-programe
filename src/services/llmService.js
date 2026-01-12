@@ -13,17 +13,23 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 class LLMService {
     constructor() {
         this.openai = null;
-        this.model = "gpt-5.2";
+        this.model = "deepseek-chat";
         this.temperature = 0.2;
 
         // Pricing per 1K tokens (Approximation based on GPT-4o tiers as fallback)
         // Engineering-grade pricing model with explicit units and caching support
         this.pricing = {
-            "gpt-5.2": {
+            "deepseek-chat": {
                 unit: "per_1k_tokens",
                 input: 0.00175,
                 output: 0.014,
                 cached_input: 0.000175
+            },
+            "deepseek-reasoner": {
+                "unit": "per_1k_tokens",
+                "input": 0.00055,
+                "output": 0.00219,
+                "cached_input": 0.00014
             },
             "gpt-4o": {
                 unit: "per_1k_tokens",
@@ -40,12 +46,13 @@ class LLMService {
         this.maxCostPerRun = 5.0; // Hard ceiling ($5.00) to prevent runaway loops
 
         // Lazy load OpenAI only if key is present
-        if (process.env.OPENAI_API_KEY) {
+        if (process.env.DEEPSEEK_API_KEY) {
             this.openai = new OpenAI({
-                apiKey: process.env.OPENAI_API_KEY
+                apiKey: process.env.DEEPSEEK_API_KEY,
+                baseURL: 'https://api.deepseek.com'
             });
         } else {
-            console.warn('⚠️ OPENAI_API_KEY not found in env. LLM features disabled.');
+            console.warn('⚠️ DEEPSEEK_API_KEY not found in env. LLM features disabled.');
         }
     }
 
