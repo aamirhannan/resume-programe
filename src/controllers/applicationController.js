@@ -20,6 +20,24 @@ export const processApplication = async (req, res) => {
             return res.status(400).json({ error: 'Role, Job Description, and Target Email are required.' });
         }
 
+        // Check for duplicate application (Same Email + Same Role) within 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const existingApp = await Application.findOne({
+            email,
+            role,
+            createdAt: { $gte: sevenDaysAgo }
+        });
+
+        if (existingApp) {
+            return res.status(429).json({ // 429 Too Many Requests
+                success: false,
+                error: 'Cooldown active',
+                message: `You already applied for the '${role}' role to '${email}' within the last 7 days. Please wait before reapplying.`
+            });
+        }
+
         // Save to DB with PENDING status
         const application = new Application({
             role,
