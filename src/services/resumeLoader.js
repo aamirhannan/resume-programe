@@ -15,6 +15,6 @@ export const getResumeByRole = (role) => {
         case 'softwareengineer':
             return softwareEngineer;
         default:
-            throw new Error(`Role '${role}' not found. Available roles: frontend, backend, fullstack`);
+            return softwareEngineer;
     }
 };

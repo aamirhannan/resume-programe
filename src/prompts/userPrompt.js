@@ -1126,9 +1126,7 @@ CANDIDATE EXPERIENCE:
 2+ years (fixed, do not alter)
 
 JOB DESCRIPTION (for role title and tech relevance only):
-"""
-${jobDescription.substring(0, 500)}
-"""
+${JSON.stringify(jobDescription.substring(0, 500))}
 
 SUBJECT LINE RULES:
 - Must include:

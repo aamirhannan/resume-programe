@@ -15,10 +15,13 @@ export class SendApplicationEmail extends Step {
             throw new Error('Target email is missing in context.');
         }
 
-        console.log(`Sending email to ${targetEmail}...`);
+        // Sanitize email: Convert "fancy" styles (bold/italic) to standard text
+        const sanitizedEmail = targetEmail.normalize('NFKC').trim();
+
+        console.log(`Sending email to ${sanitizedEmail}...`);
 
         const success = await emailService.sendEmail({
-            to: targetEmail,
+            to: sanitizedEmail,
             subject: emailSubject || 'Job Application',
             text: coverLetter || 'Please find my resume attached.',
             attachments: pdfPath ? [{
