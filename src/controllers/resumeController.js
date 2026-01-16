@@ -73,30 +73,30 @@ export const generateResumePDF = async (req, res) => {
         });
 
         // Generate PDF
-        const pdfBuffer = await createPDF(result.finalResume);
+        // const pdfBuffer = await createPDF(result.finalResume);
         const evidenceBasedResume = await createPDF(result.evidenceBasedRefinementResult);
 
         // Save locally for debugging/verification
-        fs.writeFileSync(`Resume_${role || 'Optimized'}.pdf`, pdfBuffer);
-        fs.writeFileSync(`Resume_${role || 'Optimized'}_EvidenceBased.pdf`, evidenceBasedResume);
+        // fs.writeFileSync(`Resume_${role || 'Optimized'}.pdf`, pdfBuffer);
+        // fs.writeFileSync(`Resume_${role || 'Optimized'}_EvidenceBased.pdf`, evidenceBasedResume);
 
         // Create Zip
-        const zip = new AdmZip();
-        zip.addFile(`Resume_${role || 'Optimized'}.pdf`, pdfBuffer);
-        zip.addFile(`Resume_${role || 'Optimized'}_EvidenceBased.pdf`, evidenceBasedResume);
+        // const zip = new AdmZip();
+        // zip.addFile(`Resume_${role || 'Optimized'}.pdf`, pdfBuffer);
+        // zip.addFile(`Resume_${role || 'Optimized'}_EvidenceBased.pdf`, evidenceBasedResume);
 
-        const zipBuffer = zip.toBuffer();
+        // const zipBuffer = zip.toBuffer();
 
         res.set({
-            'Content-Type': 'application/zip',
-            'Content-Length': zipBuffer.length,
-            'Content-Disposition': `attachment; filename="Resumes_${role || 'Optimized'}.zip"`,
+            'Content-Type': 'application/pdf',
+            'Content-Length': evidenceBasedResume.length,
+            'Content-Disposition': `attachment; filename="Resumes_${role || 'Optimized'}.pdf"`,
             'X-Token-Usage-Cost': result.tokenUsage?.cost?.toFixed(4) || '0',
             'X-Token-Input': result.tokenUsage?.input || '0',
             'X-Token-Output': result.tokenUsage?.output || '0'
         });
 
-        res.send(zipBuffer);
+        res.send(evidenceBasedResume);
 
     } catch (error) {
         console.error('Error generating PDF:', error);
