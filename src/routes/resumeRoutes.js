@@ -1,6 +1,6 @@
 import express from 'express';
-import { generateResume, generateResumePDF } from '../controllers/resumeController.js';
-import { processApplication, retryFailedApplications } from '../controllers/applicationController.js';
+import { generateResume, generateResumePDF } from '#controllers/resumeController.js';
+import { processApplication, retryFailedApplications } from '#controllers/applicationController.js';
 
 const router = express.Router();
 
@@ -10,8 +10,8 @@ router.post('/process-application', processApplication);
 router.post('/retry-failed', retryFailedApplications);
 
 // generate resume
-router.post('/generate-resume-content', () => { });
-router.post('/generate-resume-pdf', () => { });
+router.post('/generate-resume-content', generateResume);
+router.post('/generate-resume-pdf', generateResumePDF);
 
 // founders outreach
 // apify integration

@@ -25,10 +25,6 @@ export const generateResume = async (req, res) => {
         // Execute Pipeline
         const pipeline = new Pipeline()
             .addStep(new RewriteResumeViaLLM())
-        // .addStep(new JDAnalyzer())
-        // .addStep(new SignalMapper())
-        // .addStep(new ResumeRewriter())
-        // .addStep(new CvWolfATSAnalyzer());
 
         const result = await pipeline.execute({
             resume: baseResume,
@@ -69,10 +65,6 @@ export const generateResumePDF = async (req, res) => {
             .addStep(new CriticalAnalysis())
             .addStep(new EvidenceBasedRefinement())
             .addStep(new InsertNewlyCreatedResumePoints())
-        // .addStep(new JDAnalyzer())
-        // .addStep(new SignalMapper())
-        // .addStep(new ResumeRewriter())
-        // .addStep(new CvWolfATSAnalyzer());
 
         const result = await pipeline.execute({
             resume: baseResume,
