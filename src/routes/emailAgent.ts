@@ -1,14 +1,14 @@
 import express, { Router } from 'express';
 
 import { 
-    processApplication,
+    processEmail,
     retryFailedApplications
-} from '#src/controllers/applicationController';
+} from '#src/controllers/emailAgentController';
 
 
 const router: Router = express.Router();
 
-router.post('/process-application', processApplication);
+router.post('/process-application', processEmail);
 router.post('/retry-failed-applications', retryFailedApplications);
 
 export default router;
