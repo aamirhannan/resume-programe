@@ -11,9 +11,10 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import resumeRoutes from '#src/routes/resumeRoutes';
+import routes from '#src/routes/index';
 // import connectDB from '#src/config/db';
 import { startWorker } from '#src/workers/jobWorker';
+import { authMiddleware } from '#src/middleware/authMiddleware';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,7 +28,8 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.use('/api', resumeRoutes);
+// Apply global auth middleware effectively, or specific to /api
+app.use('/api', authMiddleware, routes);
 
 // Health check
 app.get('/health', (req, res) => {
