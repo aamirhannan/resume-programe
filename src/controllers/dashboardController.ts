@@ -5,11 +5,14 @@ const dashboardRepo = new SupabaseDashboardRepository();
 
 export const getMetrics = async (req: Request, res: Response) => {
     try {
+        const client = req.supabase;
+        if (!client) return res.status(401).json({ error: 'Unauthorized: No DB context' });
+
         const { startDate, endDate } = req.query;
         const start = startDate ? new Date(startDate as string) : undefined;
         const end = endDate ? new Date(endDate as string) : undefined;
         
-        const data = await dashboardRepo.getMetrics(start, end);
+        const data = await dashboardRepo.getMetrics(client, start, end);
         res.json(data);
     } catch (error) {
         console.error('Error fetching metrics:', error);
@@ -19,11 +22,14 @@ export const getMetrics = async (req: Request, res: Response) => {
 
 export const getRoleDistributionChart = async (req: Request, res: Response) => {
     try {
+        const client = req.supabase;
+        if (!client) return res.status(401).json({ error: 'Unauthorized: No DB context' });
+
         const { startDate, endDate } = req.query;
         const start = startDate ? new Date(startDate as string) : undefined;
         const end = endDate ? new Date(endDate as string) : undefined;
 
-        const data = await dashboardRepo.getRoleDistribution(start, end);
+        const data = await dashboardRepo.getRoleDistribution(client, start, end);
         res.json(data);
     } catch (error) {
         console.error('Error fetching role distribution:', error);
@@ -33,11 +39,14 @@ export const getRoleDistributionChart = async (req: Request, res: Response) => {
 
 export const getDailyVelocityChart = async (req: Request, res: Response) => {
     try {
+        const client = req.supabase;
+        if (!client) return res.status(401).json({ error: 'Unauthorized: No DB context' });
+
         const { startDate, endDate } = req.query;
         const start = startDate ? new Date(startDate as string) : undefined;
         const end = endDate ? new Date(endDate as string) : undefined;
 
-        const data = await dashboardRepo.getDailyVelocity(start, end);
+        const data = await dashboardRepo.getDailyVelocity(client, start, end);
         res.json(data);
     } catch (error) {
         console.error('Error fetching daily velocity:', error);
@@ -47,11 +56,14 @@ export const getDailyVelocityChart = async (req: Request, res: Response) => {
 
 export const getHeatmapData = async (req: Request, res: Response) => {
     try {
+        const client = req.supabase;
+        if (!client) return res.status(401).json({ error: 'Unauthorized: No DB context' });
+
         const { startDate, endDate } = req.query;
         const start = startDate ? new Date(startDate as string) : undefined;
         const end = endDate ? new Date(endDate as string) : undefined;
 
-        const data = await dashboardRepo.getActivityHeatmap(start, end);
+        const data = await dashboardRepo.getActivityHeatmap(client, start, end);
         res.json(data);
     } catch (error) {
         console.error('Error fetching heatmap:', error);
@@ -61,8 +73,11 @@ export const getHeatmapData = async (req: Request, res: Response) => {
 
 export const getRecentActivity = async (req: Request, res: Response) => {
     try {
+        const client = req.supabase;
+        if (!client) return res.status(401).json({ error: 'Unauthorized: No DB context' });
+
         const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
-        const data = await dashboardRepo.getRecentActivity(limit);
+        const data = await dashboardRepo.getRecentActivity(client, limit);
         res.json(data);
     } catch (error) {
         console.error('Error fetching recent activity:', error);

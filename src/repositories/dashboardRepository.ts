@@ -1,11 +1,11 @@
-import { supabase } from '#src/config/supabase';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 export interface IDashboardRepository {
-  getMetrics(startDate?: Date, endDate?: Date): Promise<any>;
-  getRoleDistribution(startDate?: Date, endDate?: Date): Promise<any[]>;
-  getDailyVelocity(startDate?: Date, endDate?: Date): Promise<any[]>;
-  getActivityHeatmap(startDate?: Date, endDate?: Date): Promise<any[]>;
-  getRecentActivity(limit?: number): Promise<any[]>;
+  getMetrics(client: SupabaseClient, startDate?: Date, endDate?: Date): Promise<any>;
+  getRoleDistribution(client: SupabaseClient, startDate?: Date, endDate?: Date): Promise<any[]>;
+  getDailyVelocity(client: SupabaseClient, startDate?: Date, endDate?: Date): Promise<any[]>;
+  getActivityHeatmap(client: SupabaseClient, startDate?: Date, endDate?: Date): Promise<any[]>;
+  getRecentActivity(client: SupabaseClient, limit?: number): Promise<any[]>;
 }
 
 export class SupabaseDashboardRepository implements IDashboardRepository {
@@ -20,14 +20,10 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     return query;
   }
 
-  async getMetrics(startDate?: Date, endDate?: Date) {
-    // We need counts for 3 tables: email_automations, founder_outreaches, resume_generations
-    // And ideally calculate growth (comparison with previous period).
-    // For MVP, we might just return total counts if growth is too complex for a single query, 
-    // but user asked for growth. Let's try to get current period counts first.
-
+  async getMetrics(client: SupabaseClient, startDate?: Date, endDate?: Date) {
+    // Uses RLS: The client is already scoped to the user.
     const getCount = async (table: string) => {
-      let query = supabase.from(table).select('*', { count: 'exact', head: true }).eq('status', 'SUCCESS');
+      let query = client.from(table).select('*', { count: 'exact', head: true }).eq('status', 'SUCCESS');
       query = this.applyDateFilter(query, 'created_at', startDate, endDate);
       const { count, error } = await query;
       if (error) console.error(`Error counting ${table}:`, error);
@@ -39,22 +35,16 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     const resumeGeneratedCount = await getCount('resume_generations');
 
     return {
-      totalSent: { count: emailAgentCount + founderOutreachCount + resumeGeneratedCount, growth: 0 }, // Growth calculation requires historical data, skipping for now or mocking
+      totalSent: { count: emailAgentCount + founderOutreachCount + resumeGeneratedCount, growth: 0 },
       emailAgent: { count: emailAgentCount, growth: 0 },
       founderOutreach: { count: founderOutreachCount, growth: 0 },
       resumeGenerated: { count: resumeGeneratedCount, growth: 0 }
     };
   }
 
-  async getRoleDistribution(startDate?: Date, endDate?: Date) {
-      // Aggregate role from email_automations and founder_outreaches
-      // distinct roles: Frontend, Backend, Full Stack
-      // This is harder with just Supabase client unless we use RPC or raw SQL. 
-      // We will fetch all (or filtered) and aggregate in JS for now as dataset is likely small, 
-      // or use .select('role') and count.
-      
+  async getRoleDistribution(client: SupabaseClient, startDate?: Date, endDate?: Date) {
       const fetchRoles = async (table: string) => {
-        let query = supabase.from(table).select('role');
+        let query = client.from(table).select('role');
         query = this.applyDateFilter(query, 'created_at', startDate, endDate);
         const { data, error } = await query;
         if(error) return [];
@@ -71,7 +61,6 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
           distribution[r] = (distribution[r] || 0) + 1;
       });
 
-      // Format for recharts or similar
       const result = Object.entries(distribution).map(([role, count]) => ({
           role,
           count,
@@ -82,17 +71,14 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
   }
 
   private getColorForRole(role: string): string {
-      // Mock colors
-      if(role.toLowerCase().includes('frontend')) return '#8884d8'; // purple
-      if(role.toLowerCase().includes('backend')) return '#82ca9d'; // green
-      if(role.toLowerCase().includes('full')) return '#ffc658'; // orange
+      if(role.toLowerCase().includes('frontend')) return '#8884d8';
+      if(role.toLowerCase().includes('backend')) return '#82ca9d';
+      if(role.toLowerCase().includes('full')) return '#ffc658';
       return '#cccccc';
   }
 
-  async getDailyVelocity(startDate?: Date, endDate?: Date) {
-      // Group by day and role.
-      // Fetch 'created_at' and 'role' from email_automations (as per requirement "emails sent per day")
-      let query = supabase.from('email_automations').select('created_at, role');
+  async getDailyVelocity(client: SupabaseClient, startDate?: Date, endDate?: Date) {
+      let query = client.from('email_automations').select('created_at, role');
       query = this.applyDateFilter(query, 'created_at', startDate, endDate);
       
       const { data, error } = await query;
@@ -101,11 +87,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
           return [];
       }
 
-      // Process in JS
       const grouped: Record<string, any> = {};
       data.forEach((item: any) => {
           const date = new Date(item.created_at).toISOString().split('T')[0];
-          // Or format as "Mon", "Tue" if range is small, but ISO YYYY-MM-DD is safer for sorting
           if (!grouped[date]) grouped[date] = { date };
           const role = item.role || 'Other';
           grouped[date][role] = (grouped[date][role] || 0) + 1;
@@ -114,10 +98,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
       return Object.values(grouped).sort((a: any, b: any) => a.date.localeCompare(b.date));
   }
 
-  async getActivityHeatmap(startDate?: Date, endDate?: Date) {
-    // Union created_at from all 3 tables
+  async getActivityHeatmap(client: SupabaseClient, startDate?: Date, endDate?: Date) {
     const fetchDates = async (table: string) => {
-        let query = supabase.from(table).select('created_at');
+        let query = client.from(table).select('created_at');
         query = this.applyDateFilter(query, 'created_at', startDate, endDate);
         const { data } = await query;
         return data || [];
@@ -140,13 +123,9 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
     return Object.entries(counts).map(([date, count]) => ({ date, count }));
   }
 
-  async getRecentActivity(limit: number = 20) {
-      // Fetch from 3 tables, normalize, sort, slice.
-      // We assume volume is low enough to fetch limit from each and merge, or just simplified approach.
-      // fetching top 20 from EACH, then merging and taking top 20 total.
-      
+  async getRecentActivity(client: SupabaseClient, limit: number = 20) {
       const fetchRecent = async (table: string, typeLabel: string) => {
-          const { data, error } = await supabase
+          const { data, error } = await client
               .from(table)
               .select('*')
               .order('created_at', { ascending: false })
@@ -154,12 +133,12 @@ export class SupabaseDashboardRepository implements IDashboardRepository {
           if(error) return [];
           return data.map((d: any) => ({
               id: d.id,
-              company: d.company || 'N/A', // resume_generations might not have company
+              company: d.company || 'N/A',
               role: d.role,
               date: d.created_at,
               status: d.status,
               type: typeLabel,
-              actions: '...' // placeholder
+              actions: '...'
           }));
       };
 
