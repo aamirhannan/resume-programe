@@ -19,8 +19,10 @@ import routes from './routes/index.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+import { authMiddleware } from './middleware/authMiddleware.js';
+
 // Connect to MongoDB
-connectDB();
+// connectDB();
 
 // Middleware
 app.use(cors());
@@ -28,7 +30,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api', resumeRoutes);
-app.use('/api/v1', routes);
+app.use('/api/v1', authMiddleware, routes);
 
 // Health check
 app.get('/health', (req, res) => {
