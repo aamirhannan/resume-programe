@@ -1,4 +1,4 @@
-import { Resume } from '#models/Resume';
+import { Resume } from '../../models/Resume.js';
 
 export const softwareEngineer: Resume = {
     "header": {

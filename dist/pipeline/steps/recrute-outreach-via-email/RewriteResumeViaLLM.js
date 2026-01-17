@@ -1,6 +1,6 @@
-import { Step } from '#pipeline/Step';
-import { llmService } from '#services/llmService';
-import { rewriteResumePrompt } from '#prompts/userPrompt';
+import { Step } from '../../Step.js';
+import { llmService } from '../../../services/llmService.js';
+import { rewriteResumePrompt } from '../../../prompts/userPrompt.js';
 export class RewriteResumeViaLLM extends Step {
     constructor() {
         super('RewriteResumeViaLLM');

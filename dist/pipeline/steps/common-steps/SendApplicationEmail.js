@@ -1,5 +1,5 @@
-import { Step } from '#pipeline/Step';
-import { emailService } from '#services/emailService';
+import { Step } from '../../Step.js';
+import { emailService } from '../../../services/emailService.js';
 import path from 'path';
 export class SendApplicationEmail extends Step {
     constructor() {

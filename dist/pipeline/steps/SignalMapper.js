@@ -1,4 +1,4 @@
-import { Step } from '#pipeline/Step';
+import { Step } from '../Step.js';
 export class SignalMapper extends Step {
     constructor() {
         super('SignalMapper');

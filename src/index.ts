@@ -11,9 +11,9 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import resumeRoutes from '#src/routes/resumeRoutes';
+import resumeRoutes from './routes/resumeRoutes.js';
 // import connectDB from '#src/config/db';
-import { startWorker } from '#src/workers/jobWorker';
+import { startWorker } from './workers/jobWorker.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

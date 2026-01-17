@@ -1,5 +1,5 @@
-import { Step } from '#pipeline/Step';
-import { llmService } from '#services/llmService';
+import { Step } from '../Step.js';
+import { llmService } from '../../services/llmService.js';
 // Mapping of JD tokens to Start Verbs
 const START_PATTERNS = {
     'performance': 'Optimized',

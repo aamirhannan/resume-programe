@@ -1,5 +1,5 @@
-import { Step } from '#pipeline/Step';
-import { SKILL_ONTOLOGY } from '#src/data/skillOntology';
+import { Step } from '../Step.js';
+import { SKILL_ONTOLOGY } from '../../data/skillOntology.js';
 export class CvWolfATSAnalyzer extends Step {
     WEIGHTS;
     SEMANTIC_MAP;

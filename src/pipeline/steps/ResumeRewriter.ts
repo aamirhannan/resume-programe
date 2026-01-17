@@ -1,8 +1,8 @@
 
 
-import { Step } from '#pipeline/Step';
-import { llmService } from '#services/llmService';
-import { Resume } from '#models/Resume';
+import { Step } from '../Step.js';
+import { llmService } from '../../services/llmService.js';
+import { Resume } from '../../models/Resume.js';
 
 // Mapping of JD tokens to Start Verbs
 const START_PATTERNS: Record<string, string> = {

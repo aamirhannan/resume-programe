@@ -1,8 +1,8 @@
-import { applicationRepository } from '#repositories/applicationRepository';
-import { executeApplicationPipeline } from '#controllers/applicationController';
-import { receiveMessagesFromQueue, deleteMessageFromQueue } from '#services/sqsService';
-import { decrypt } from '#utils/crypto';
-import { emailService } from '#services/emailService';
+import { applicationRepository } from '../repositories/applicationRepository.js';
+import { executeApplicationPipeline } from '../controllers/applicationController.js';
+import { receiveMessagesFromQueue, deleteMessageFromQueue } from '../services/sqsService.js';
+import { decrypt } from '../utils/crypto.js';
+import { emailService } from '../services/emailService.js';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const WORKER_ID = Math.random().toString(36).substring(7).toUpperCase();

@@ -1,15 +1,15 @@
-import { getResumeByRole } from '#services/resumeLoader';
-import { Pipeline } from '#pipeline/Pipeline';
-import { JDAnalyzer } from '#pipeline/steps/JDAnalyzer';
-import { SignalMapper } from '#pipeline/steps/SignalMapper';
-import { ResumeRewriter } from '#pipeline/steps/ResumeRewriter';
-import { CvWolfATSAnalyzer } from '#pipeline/steps/CvWolfATSAnalyzer';
-import { createPDF } from '#services/pdfGenerator';
-import { RewriteResumeViaLLM } from '#pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM';
-import { InsertNewlyCreatedResumePoints } from '#pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints';
+import { getResumeByRole } from '../services/resumeLoader.js';
+import { Pipeline } from '../pipeline/Pipeline.js';
+import { JDAnalyzer } from '../pipeline/steps/JDAnalyzer.js';
+import { SignalMapper } from '../pipeline/steps/SignalMapper.js';
+import { ResumeRewriter } from '../pipeline/steps/ResumeRewriter.js';
+import { CvWolfATSAnalyzer } from '../pipeline/steps/CvWolfATSAnalyzer.js';
+import { createPDF } from '../services/pdfGenerator.js';
+import { RewriteResumeViaLLM } from '../pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM.js';
+import { InsertNewlyCreatedResumePoints } from '../pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints.js';
 import fs from 'fs';
-import { CriticalAnalysis } from '#pipeline/steps/recrute-outreach-via-email/CriticalAnalysis';
-import { EvidenceBasedRefinement } from '#pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement';
+import { CriticalAnalysis } from '../pipeline/steps/recrute-outreach-via-email/CriticalAnalysis.js';
+import { EvidenceBasedRefinement } from '../pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement.js';
 import AdmZip from 'adm-zip';
 import { Request, Response } from 'express';
 

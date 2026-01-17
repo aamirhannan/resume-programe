@@ -1,4 +1,4 @@
-import { supabase } from '#src/config/supabase';
+import { supabase } from '../config/supabase.js';
 import { v4 as uuidv4 } from 'uuid';
 export class SupabaseApplicationRepository {
     tableName = 'applications';

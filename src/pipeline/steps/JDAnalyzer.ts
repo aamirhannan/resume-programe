@@ -1,6 +1,6 @@
-import { Step } from '#pipeline/Step';
-import { SKILL_ONTOLOGY, SENIORITY_LEVELS } from '#src/data/skillOntology';
-import { llmService } from '#services/llmService';
+import { Step } from '../Step.js';
+import { SKILL_ONTOLOGY, SENIORITY_LEVELS } from '../../data/skillOntology.js';
+import { llmService } from '../../services/llmService.js';
 
 interface DetectedSkill {
     source: string;

@@ -1,10 +1,10 @@
-import { getResumeByRole } from '#services/resumeLoader';
-import { Pipeline } from '#pipeline/Pipeline';
-import { createPDF } from '#services/pdfGenerator';
-import { RewriteResumeViaLLM } from '#pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM';
-import { InsertNewlyCreatedResumePoints } from '#pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints';
-import { CriticalAnalysis } from '#pipeline/steps/recrute-outreach-via-email/CriticalAnalysis';
-import { EvidenceBasedRefinement } from '#pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement';
+import { getResumeByRole } from '../services/resumeLoader.js';
+import { Pipeline } from '../pipeline/Pipeline.js';
+import { createPDF } from '../services/pdfGenerator.js';
+import { RewriteResumeViaLLM } from '../pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM.js';
+import { InsertNewlyCreatedResumePoints } from '../pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints.js';
+import { CriticalAnalysis } from '../pipeline/steps/recrute-outreach-via-email/CriticalAnalysis.js';
+import { EvidenceBasedRefinement } from '../pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement.js';
 export const generateResume = async (req, res) => {
     try {
         const { role, jobDescription } = req.body;

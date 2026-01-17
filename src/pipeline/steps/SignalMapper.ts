@@ -1,5 +1,5 @@
-import { Step } from '#pipeline/Step';
-import { Resume } from '#models/Resume';
+import { Step } from '../Step.js';
+import { Resume } from '../../models/Resume.js';
 
 export class SignalMapper extends Step {
     constructor() {

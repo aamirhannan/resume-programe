@@ -13,16 +13,6 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "imports": {
-    "#src/*": "./dist/*.js",
-    "#services/*": "./dist/services/*.js",
-    "#models/*": "./dist/models/*.js",
-    "#controllers/*": "./dist/controllers/*.js",
-    "#utils/*": "./dist/utils/*.js",
-    "#pipeline/*": "./dist/pipeline/*.js",
-    "#prompts/*": "./dist/prompts/*.js",
-    "#repositories/*": "./dist/repositories/*.js"
-  },
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.967.0",
     "@supabase/supabase-js": "^2.90.1",

@@ -1,4 +1,4 @@
-import { Step } from '#pipeline/Step';
+import { Step } from '../../Step.js';
 import fs from 'fs';
 export class CleanupFiles extends Step {
     constructor() {

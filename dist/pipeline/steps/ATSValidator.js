@@ -1,4 +1,4 @@
-import { Step } from '#pipeline/Step';
+import { Step } from '../Step.js';
 export class ATSValidator extends Step {
     constructor() {
         super('ATSValidator');

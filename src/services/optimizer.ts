@@ -2,7 +2,7 @@
 /**
  * Optimizes the resume by prioritizing skills that match the Job Description.
  */
-import { Resume } from '#models/Resume';
+import { Resume } from '../models/Resume.js';
 
 export const optimizeResume = (resume: Resume, jobDescription: string): Resume => {
     if (!jobDescription) return resume;

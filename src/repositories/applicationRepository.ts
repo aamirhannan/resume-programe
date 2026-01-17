@@ -1,5 +1,5 @@
 
-import { IApplication } from '#models/Application';
+import { IApplication } from '../models/Application.js';
 
 export interface IApplicationRepository {
     findDuplicate(email: string, role: string, since: Date): Promise<IApplication | null>;

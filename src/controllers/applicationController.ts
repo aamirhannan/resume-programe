@@ -1,19 +1,19 @@
-import { getResumeByRole } from '#services/resumeLoader';
-import { Pipeline } from '#pipeline/Pipeline';
-import { RewriteResumeViaLLM } from '#pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM';
-import { CriticalAnalysis } from '#pipeline/steps/recrute-outreach-via-email/CriticalAnalysis';
-import { EvidenceBasedRefinement } from '#pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement';
-import { InsertNewlyCreatedResumePoints } from '#pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints';
-import { GeneratePDFStep } from '#pipeline/steps/common-steps/GeneratePDFStep';
-import { GenerateCoverLetter } from '#pipeline/steps/common-steps/GenerateCoverLetter';
-import { GenerateSubjectLine } from '#pipeline/steps/common-steps/GenerateSubjectLine';
-import { SendApplicationEmail } from '#pipeline/steps/common-steps/SendApplicationEmail';
-import { CleanupFiles } from '#pipeline/steps/common-steps/CleanupFiles';
-import { applicationRepository } from '#repositories/applicationRepository';
+import { getResumeByRole } from '../services/resumeLoader.js';
+import { Pipeline } from '../pipeline/Pipeline.js';
+import { RewriteResumeViaLLM } from '../pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM.js';
+import { CriticalAnalysis } from '../pipeline/steps/recrute-outreach-via-email/CriticalAnalysis.js';
+import { EvidenceBasedRefinement } from '../pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement.js';
+import { InsertNewlyCreatedResumePoints } from '../pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints.js';
+import { GeneratePDFStep } from '../pipeline/steps/common-steps/GeneratePDFStep.js';
+import { GenerateCoverLetter } from '../pipeline/steps/common-steps/GenerateCoverLetter.js';
+import { GenerateSubjectLine } from '../pipeline/steps/common-steps/GenerateSubjectLine.js';
+import { SendApplicationEmail } from '../pipeline/steps/common-steps/SendApplicationEmail.js';
+import { CleanupFiles } from '../pipeline/steps/common-steps/CleanupFiles.js';
+import { applicationRepository } from '../repositories/applicationRepository.js';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
-import { sendMessageToQueue } from '#services/sqsService';
-import { encrypt } from '#utils/crypto';
+import { sendMessageToQueue } from '../services/sqsService.js';
+import { encrypt } from '../utils/crypto.js';
 
 dotenv.config();
 

@@ -1,4 +1,4 @@
-import { Step } from '#pipeline/Step';
+import { Step } from './Step.js';
 
 export class Pipeline<T = any> {
     steps: Step<T>[];

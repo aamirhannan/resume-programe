@@ -1,8 +1,8 @@
-import { frontend } from '#src/data/resumes/frontend';
-import { backend } from '#src/data/resumes/backend';
-import { fullStack } from '#src/data/resumes/fullStack';
-import { softwareEngineer } from '#src/data/resumes/softwareEngineer';
-import { Resume } from '#models/Resume';
+import { frontend } from '../data/resumes/frontend.js';
+import { backend } from '../data/resumes/backend.js';
+import { fullStack } from '../data/resumes/fullStack.js';
+import { softwareEngineer } from '../data/resumes/softwareEngineer.js';
+import { Resume } from '../models/Resume.js';
 
 export const getResumeByRole = (role: string): Resume => {
     const normalizedRole = role.toLowerCase().replace('-', '').replace(' ', '');

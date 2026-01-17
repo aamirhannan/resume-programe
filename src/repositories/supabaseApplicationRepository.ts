@@ -1,7 +1,7 @@
 
 import { IApplicationRepository } from './applicationRepository.js';
-import { IApplication } from '#models/Application';
-import { supabase } from '#src/config/supabase';
+import { IApplication } from '../models/Application.js';
+import { supabase } from '../config/supabase.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SupabaseApplicationRepository implements IApplicationRepository {
