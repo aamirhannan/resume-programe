@@ -1,0 +1,46 @@
+# Project Rules: AI Powered Resume Optimization Engine
+
+## Architecture Principles
+1.  **MVC Pattern**: Strictly follow Model-View-Controller architecture.
+    -   **Model**: Data structure definitions (TypeScript Interfaces).
+    -   **View**: API Responses (JSON).
+    -   **Controller**: Business logic and request handling.
+2.  **Separation of Concerns**:
+    -   **Database Logic**: ISOLATED in specific "Database Controllers" (Repositories).
+    -   **Business Logic**: Handled in "Logic Controllers".
+    -   **Routes**: Delegate execution to Controllers.
+
+## Implementation Rules
+
+### 1. Controllers
+-   **Class-Based**: ALL Controllers must be implemented as **Classes**.
+-   **Naming Convention**: `[Entity]Controller` (e.g., `ApplicationController`, `ResumeController`).
+-   **Structure**:
+    -   Methods should be `async`.
+    -   Use `req` and `res` (Express types) as arguments for handler methods (or a cleaner abstraction if using a framework wrapper).
+    -   Handle errors centrally or via `try/catch` blocks invoking a standard error response method.
+
+### 2. Database Controllers (Repositories)
+-   **Purpose**: Handle ALL direct database interactions (Supabase/SQL).
+-   **Class-Based**: ALL Database Controllers must be implemented as **Classes**.
+-   **Naming Convention**: `[Entity]Repository` or `[Entity]DatabaseController`.
+-   **No Business Logic**: Do not put complex business rules here; strictly CRUD and data retrieval.
+
+### 3. Models
+-   Define TypeScript interfaces for all database tables.
+-   Location: `src/models/`.
+
+## Entities & Structure (Based on Database Schema)
+Reflecting user's schema `databasetable.txt`:
+1.  **UserSettings**: `UserSettingsController` & `UserSettingsRepository`
+2.  **MasterResumes**: `MasterResumesController` & `MasterResumesRepository`
+3.  **GeneratedResumes**: `GeneratedResumesController` & `GeneratedResumesRepository`
+4.  **EmailAutomations**: `EmailAutomationsController` & `EmailAutomationsRepository`
+5.  **FounderOutreaches**: `FounderOutreachesController` & `FounderOutreachesRepository`
+6.  **ResumeGenerations**: `ResumeGenerationsController` & `ResumeGenerationsRepository`
+
+## General Coding Standards
+-   Use **TypeScript** strict typing.
+-   **PascalCase** for Classes and Types.
+-   **camelCase** for variables and methods.
+-   **Explicit Return Types**: Always define return types for functions.

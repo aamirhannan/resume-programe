@@ -1,106 +1,89 @@
+
+import { Request, Response } from 'express';
+import { BaseController } from './BaseController.js';
 import { getResumeByRole } from '../services/resumeLoader.js';
 import { Pipeline } from '../pipeline/Pipeline.js';
-import { JDAnalyzer } from '../pipeline/steps/JDAnalyzer.js';
-import { SignalMapper } from '../pipeline/steps/SignalMapper.js';
-import { ResumeRewriter } from '../pipeline/steps/ResumeRewriter.js';
-import { CvWolfATSAnalyzer } from '../pipeline/steps/CvWolfATSAnalyzer.js';
-import { createPDF } from '../services/pdfGenerator.js';
 import { RewriteResumeViaLLM } from '../pipeline/steps/recrute-outreach-via-email/RewriteResumeViaLLM.js';
-import { InsertNewlyCreatedResumePoints } from '../pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints.js';
-import fs from 'fs';
 import { CriticalAnalysis } from '../pipeline/steps/recrute-outreach-via-email/CriticalAnalysis.js';
 import { EvidenceBasedRefinement } from '../pipeline/steps/recrute-outreach-via-email/EvidenceBasedRefinement.js';
-import AdmZip from 'adm-zip';
-import { Request, Response } from 'express';
+import { InsertNewlyCreatedResumePoints } from '../pipeline/steps/recrute-outreach-via-email/InsertNewlyCreatedResumePoints.js';
+import { createPDF } from '../services/pdfGenerator.js';
 
-export const generateResume = async (req: Request, res: Response): Promise<any> => {
-    try {
-        const { role, jobDescription } = req.body;
+export class ResumeController extends BaseController {
 
-        if (!role) {
-            return res.status(400).json({ error: 'Role is required (frontend, backend, fullstack)' });
+    public async generateResume(req: Request, res: Response): Promise<any> {
+        try {
+            const { role, jobDescription } = req.body;
+
+            if (!role) {
+                return this.clientError(res, 'Role is required (frontend, backend, fullstack)');
+            }
+
+            const baseResume = getResumeByRole(role);
+
+            // Execute Pipeline
+            const pipeline = new Pipeline()
+                .addStep(new RewriteResumeViaLLM());
+
+            const result: any = await pipeline.execute({
+                resume: baseResume,
+                jobDescription,
+                tokenUsage: { input: 0, output: 0, total: 0, cost: 0 }
+            });
+
+            return this.ok(res, {
+                success: true,
+                data: result.rewrittenResume,
+                meta: result.meta,
+                analysis: result.cvWolfAnalysis,
+                tokenUsage: result.tokenUsage
+            });
+        } catch (error: any) {
+            console.error('Error serving resume request:', error);
+            return this.fail(res, error.message || 'Internal Server Error');
         }
-
-        const baseResume = getResumeByRole(role);
-
-        // Execute Pipeline
-        const pipeline = new Pipeline()
-            .addStep(new RewriteResumeViaLLM())
-
-        const result: any = await pipeline.execute({
-            resume: baseResume,
-            jobDescription,
-            tokenUsage: { input: 0, output: 0, total: 0, cost: 0 }
-        });
-
-        res.json({
-            success: true,
-            data: result.rewrittenResume,
-            meta: result.meta,
-            analysis: result.cvWolfAnalysis, // Expose the detailed analysis
-            tokenUsage: result.tokenUsage
-        });
-    } catch (error: any) {
-        console.error('Error serving resume request:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message || 'Internal Server Error'
-        });
     }
-};
 
-export const generateResumePDF = async (req: Request, res: Response): Promise<any> => {
-    try {
-        const { role, jobDescription } = req.body;
+    public async generateResumePDF(req: Request, res: Response): Promise<any> {
+        try {
+            const { role, jobDescription } = req.body;
 
-        // Pipeline mode
-        if (!role) {
-            return res.status(400).json({ error: 'Role is required' });
+            if (!role) {
+                return this.clientError(res, 'Role is required');
+            }
+
+            const baseResume = getResumeByRole(role);
+
+            // Execute Pipeline to get optimized data
+            const pipeline = new Pipeline()
+                .addStep(new RewriteResumeViaLLM())
+                .addStep(new CriticalAnalysis())
+                .addStep(new EvidenceBasedRefinement())
+                .addStep(new InsertNewlyCreatedResumePoints());
+
+            const result: any = await pipeline.execute({
+                resume: baseResume,
+                jobDescription,
+                tokenUsage: { input: 0, output: 0, total: 0, cost: 0 }
+            });
+
+            // Generate PDF
+            const evidenceBasedResume = await createPDF(result.evidenceBasedRefinementResult);
+
+            res.set({
+                'Content-Type': 'application/pdf',
+                'Content-Length': evidenceBasedResume.length.toString(),
+                'Content-Disposition': `attachment; filename="Resumes_${role || 'Optimized'}.pdf"`,
+                'X-Token-Usage-Cost': result.tokenUsage?.cost?.toFixed(4) || '0',
+                'X-Token-Input': result.tokenUsage?.input || '0',
+                'X-Token-Output': result.tokenUsage?.output || '0'
+            });
+
+            return res.send(evidenceBasedResume);
+
+        } catch (error: any) {
+            console.error('Error generating PDF:', error);
+            return this.fail(res, error.message);
         }
-
-        const baseResume = getResumeByRole(role);
-
-        // Execute Pipeline to get optimized data
-        const pipeline = new Pipeline()
-            .addStep(new RewriteResumeViaLLM())
-            .addStep(new CriticalAnalysis())
-            .addStep(new EvidenceBasedRefinement())
-            .addStep(new InsertNewlyCreatedResumePoints())
-
-        const result: any = await pipeline.execute({
-            resume: baseResume,
-            jobDescription,
-            tokenUsage: { input: 0, output: 0, total: 0, cost: 0 }
-        });
-
-        // Generate PDF
-        // const pdfBuffer = await createPDF(result.finalResume);
-        const evidenceBasedResume = await createPDF(result.evidenceBasedRefinementResult);
-
-        // Save locally for debugging/verification
-        // fs.writeFileSync(`Resume_${role || 'Optimized'}.pdf`, pdfBuffer);
-        // fs.writeFileSync(`Resume_${role || 'Optimized'}_EvidenceBased.pdf`, evidenceBasedResume);
-
-        // Create Zip
-        // const zip = new AdmZip();
-        // zip.addFile(`Resume_${role || 'Optimized'}.pdf`, pdfBuffer);
-        // zip.addFile(`Resume_${role || 'Optimized'}_EvidenceBased.pdf`, evidenceBasedResume);
-
-        // const zipBuffer = zip.toBuffer();
-
-        res.set({
-            'Content-Type': 'application/pdf',
-            'Content-Length': evidenceBasedResume.length.toString(),
-            'Content-Disposition': `attachment; filename="Resumes_${role || 'Optimized'}.pdf"`,
-            'X-Token-Usage-Cost': result.tokenUsage?.cost?.toFixed(4) || '0',
-            'X-Token-Input': result.tokenUsage?.input || '0',
-            'X-Token-Output': result.tokenUsage?.output || '0'
-        });
-
-        res.send(evidenceBasedResume);
-
-    } catch (error: any) {
-        console.error('Error generating PDF:', error);
-        res.status(500).json({ success: false, error: error.message });
     }
-};
+}

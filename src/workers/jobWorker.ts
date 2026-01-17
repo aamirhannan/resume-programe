@@ -1,5 +1,5 @@
 import { applicationRepository } from '../repositories/applicationRepository.js';
-import { executeApplicationPipeline } from '../controllers/applicationController.js';
+import { executeApplicationPipeline } from '../services/applicationPipelineService.js';
 import { receiveMessagesFromQueue, deleteMessageFromQueue } from '../services/sqsService.js';
 import { decrypt } from '../utils/crypto.js';
 import { emailService } from '../services/emailService.js';

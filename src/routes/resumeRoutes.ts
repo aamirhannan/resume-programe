@@ -1,17 +1,21 @@
+
 import express, { Router } from 'express';
-import { generateResume, generateResumePDF } from '../controllers/resumeController.js';
-import { processApplication, retryFailedApplications } from '../controllers/applicationController.js';
+import { ResumeController } from '../controllers/resumeController.js';
+import { ApplicationController } from '../controllers/applicationController.js';
 
 const router: Router = express.Router();
+const resumeController = new ResumeController();
+const applicationController = new ApplicationController();
 
-// router.post('/generate', generateResume);
-// router.post('/generate-pdf', generateResumePDF);
-router.post('/process-application', processApplication);
-router.post('/retry-failed', retryFailedApplications);
+// router.post('/generate', (req, res) => resumeController.generateResume(req, res));
+// router.post('/generate-pdf', (req, res) => resumeController.generateResumePDF(req, res));
+
+router.post('/process-application', (req, res) => applicationController.processApplication(req, res));
+router.post('/retry-failed', (req, res) => applicationController.retryFailedApplications(req, res));
 
 // generate resume
-router.post('/generate-resume-content', generateResume);
-router.post('/generate-resume-pdf', generateResumePDF);
+router.post('/generate-resume-content', (req, res) => resumeController.generateResume(req, res));
+router.post('/generate-resume-pdf', (req, res) => resumeController.generateResumePDF(req, res));
 
 // founders outreach
 // apify integration
