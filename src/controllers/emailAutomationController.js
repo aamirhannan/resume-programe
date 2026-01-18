@@ -24,6 +24,13 @@ export const createEmailAutomation = async (req, res) => {
         const appPassword = req.headers['x-smtp-password'];
         const encryptedPassword = encrypt(appPassword);
         const payload = camelToSnake(req.body);
+
+        // Check for duplicates
+        const duplicates = await dbController.checkDuplicateEmailWithInTimeFrame(supabase, payload);
+        if (duplicates && duplicates.length > 0) {
+            return res.status(409).json({ error: 'Duplicate application: You have already applied to this email for this role in the last 7 days.' });
+        }
+
         const data = await dbController.insertEmailAutomation(supabase, payload, req.user.id);
 
         // Push the task into SQS queue
