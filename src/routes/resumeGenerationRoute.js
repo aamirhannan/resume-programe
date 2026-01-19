@@ -3,7 +3,7 @@ import { getResumeGeneration, createResumeGeneration } from '../controllers/resu
 
 const router = express.Router();
 
-router.get('/resume-generation', getResumeGeneration);
-router.post('/resume-generation', createResumeGeneration);
+router.get('/get-resume', getResumeGeneration);
+router.post('/create-resume', createResumeGeneration);
 
 export default router;

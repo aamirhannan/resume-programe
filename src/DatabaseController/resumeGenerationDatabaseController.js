@@ -8,10 +8,21 @@ export const fetchResumeGenerations = async (client) => {
     return data;
 };
 
-export const insertResumeGeneration = async (client, generationData, userId) => {
+export const createResumeGeneration = async (client, generationData, userId) => {
     const { data, error } = await client
         .from('resume_generations')
         .insert({ ...generationData, user_id: userId })
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const updateResumeGeneration = async (client, generationData, userId) => {
+    const { data, error } = await client
+        .from('resume_generations')
+        .update({ ...generationData, user_id: userId })
         .select()
         .single();
 
