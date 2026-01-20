@@ -2,7 +2,8 @@
 export const fetchEmailAutomations = async (client) => {
     const { data, error } = await client
         .from('email_automations')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data;

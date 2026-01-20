@@ -2,7 +2,8 @@
 export const fetchResumeGenerations = async (client) => {
     const { data, error } = await client
         .from('resume_generations')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
 
     if (error) throw error;
     return data;
@@ -13,18 +14,20 @@ export const createResumeGeneration = async (client, generationData, userId) => 
         .from('resume_generations')
         .insert({ ...generationData, user_id: userId })
         .select()
-        .single();
+        .single()
 
     if (error) throw error;
     return data;
 };
 
-export const updateResumeGeneration = async (client, generationData, userId) => {
+export const updateResumeData = async (client, generationData, userId) => {
+    const { id, ...updatePayload } = generationData;
     const { data, error } = await client
         .from('resume_generations')
-        .update({ ...generationData, user_id: userId })
+        .update({ ...updatePayload, user_id: userId })
+        .eq('id', id)
         .select()
-        .single();
+        .single()
 
     if (error) throw error;
     return data;
