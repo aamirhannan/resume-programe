@@ -5,6 +5,7 @@ import { emailService } from '../services/emailService.js';
 import { supabaseAdmin } from '../config/supabaseAdmin.js';
 import { snakeToCamel } from '../controllers/utils.js';
 import { getCompanyFromEmail } from '../utils/utilFunctions.js';
+import { completeRequestLog, logStep } from '../services/apiRequestLogger.js';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const WORKER_ID = Math.random().toString(36).substring(7).toUpperCase();
@@ -28,7 +29,13 @@ export const startWorker = async () => {
                 try {
                     // Task payload structure: { applicationID, senderEmail, encryptedPassword }
                     // Note: 'applicationID' maps to 'id' in createEmailAutomation controller
-                    const { id, encryptedPassword, senderEmail } = JSON.parse(Body);
+                    // Task payload structure: { applicationID, senderEmail, encryptedPassword, logId }
+                    // Note: 'applicationID' maps to 'id' in createEmailAutomation controller
+                    const { id, encryptedPassword, senderEmail, logId, company, role } = JSON.parse(Body);
+
+                    if (logId) {
+                        await logStep(supabaseAdmin, logId, 'WORKER_RECEIVED', 'SUCCESS', { workerId: WORKER_ID });
+                    }
 
                     console.log(`👷 Worker received job: ${id}`);
 
@@ -64,6 +71,9 @@ export const startWorker = async () => {
                             .update({ status: 'FAILED', error: failError, updated_at: new Date() })
                             .eq('id', id);
                         await deleteMessageFromQueue(ReceiptHandle);
+                        if (logId) {
+                            await logStep(supabaseAdmin, logId, 'DECRYPT_PASSWORD', 'FAILED', { error: failError });
+                        }
                         continue;
                     }
 
@@ -80,7 +90,14 @@ export const startWorker = async () => {
                             .eq('id', id);
 
                         await deleteMessageFromQueue(ReceiptHandle);
+                        if (logId) {
+                            await logStep(supabaseAdmin, logId, 'SMTP_VERIFY', 'FAILED', { error: errorMsg });
+                        }
                         continue;
+                    }
+
+                    if (logId) {
+                        await logStep(supabaseAdmin, logId, 'SMTP_VERIFY', 'SUCCESS');
                     }
 
                     // 4. Mark IN_PROGRESS
@@ -102,11 +119,17 @@ export const startWorker = async () => {
                         jobDescription: jobDetails.jobDescription,
                         targetEmail: jobDetails.targetEmail,
                         senderEmail: senderEmail,
-                        appPassword: appPassword
+                        appPassword: appPassword,
+                        logId: logId,
+                        supabase: supabaseAdmin
                     });
 
+                    if (logId) {
+                        await logStep(supabaseAdmin, logId, 'PIPELINE_EXECUTION', 'SUCCESS', { company: result.company });
+                    }
+
                     console.log('--- Debug: Pipeline Result ---');
-                    console.log('Result:', JSON.stringify(result));
+                    // console.log('Result:', JSON.stringify(result));
 
                     // 6. Success Update
                     // Note: 'result' column doesn't exist in your schema provided, 
@@ -117,19 +140,41 @@ export const startWorker = async () => {
                             resume_content: result.finalResume || '',
                             email_subject: result.emailSubject || '',
                             cover_letter: result.coverLetter || '',
-                            company: getCompanyFromEmail(result.targetEmail),
+                            company,
+                            role,
                             updated_at: new Date()
                         })
                         .eq('id', id);
 
                     console.log(`✅ Job ${id} COMPLETED.`);
+
+                    if (logId) {
+                        await completeRequestLog(
+                            supabaseAdmin,
+                            logId,
+                            'SUCCESS',
+                            200,
+                            result
+                        );
+                    }
+
                     await deleteMessageFromQueue(ReceiptHandle);
 
                 } catch (err) {
                     console.error(`❌ Job Failed:`, err);
+                    const statusCode = err.statusCode || 500;
 
                     try {
-                        const { id } = JSON.parse(Body);
+                        const { id, logId } = JSON.parse(Body);
+                        if (logId) {
+                            await completeRequestLog(
+                                supabaseAdmin,
+                                logId,
+                                'FAILED',
+                                statusCode,
+                                'FAILED',
+                                { error: err.message });
+                        }
                         if (id) {
                             await supabaseAdmin.from('email_automations')
                                 .update({ status: 'FAILED', error: err.message, updated_at: new Date() })

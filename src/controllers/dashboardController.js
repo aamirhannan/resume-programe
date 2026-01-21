@@ -56,3 +56,15 @@ export const getDashboardRecentActivity = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const getApiLogs = async (req, res) => {
+    try {
+        const supabase = getAuthenticatedClient(req.accessToken);
+        const { type, limit } = req.query;
+        const logs = await dbController.fetchApiLogs(supabase, { type, limit });
+        res.status(200).json(logs);
+    } catch (error) {
+        console.error('getApiLogs error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};

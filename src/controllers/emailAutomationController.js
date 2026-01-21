@@ -3,8 +3,10 @@ import { getAuthenticatedClient } from '../utils/supabaseClientHelper.js';
 import * as dbController from '../DatabaseController/emailAutomationDatabaseController.js';
 import { camelToSnake, snakeToCamel } from './utils.js';
 import { encrypt } from '../utils/crypto.js';
+import { createRequestLog, completeRequestLog, logStep } from '../services/apiRequestLogger.js';
 
 import { sendMessageToQueue } from '../services/sqsService.js';
+import { getCompanyFromEmail } from '../utils/utilFunctions.js';
 
 export const getEmailAutomation = async (req, res) => {
     try {
@@ -18,17 +20,30 @@ export const getEmailAutomation = async (req, res) => {
 };
 
 export const createEmailAutomation = async (req, res) => {
+    let logId = null;
+    const supabase = getAuthenticatedClient(req.accessToken);
+
     try {
-        const supabase = getAuthenticatedClient(req.accessToken);
+        const payload = camelToSnake(req.body);
+
+        const company = getCompanyFromEmail(payload["target_email"]);
+        const role = payload["role"];
+
+        // 1. Start Logging
+        logId = await createRequestLog(supabase, req.user.id, 'EMAIL_AUTOMATION', '/create-email', payload, company, role);
+
         const senderEmail = req.headers['x-smtp-email'];
         const appPassword = req.headers['x-smtp-password'];
         const encryptedPassword = encrypt(appPassword);
-        const payload = camelToSnake(req.body);
 
         // Check for duplicates
         const duplicates = await dbController.checkDuplicateEmailWithInTimeFrame(supabase, payload);
         if (duplicates && duplicates.length > 0) {
-            return res.status(409).json({ error: 'Duplicate application: You have already applied to this email for this role in the last 7 days.' });
+            const errorMsg = 'Duplicate application: You have already applied to this email for this role in the last 7 days.';
+            if (logId) {
+                await completeRequestLog(supabase, logId, 'FAILED', 409, { error: errorMsg }, errorMsg);
+            }
+            return res.status(409).json({ error: errorMsg });
         }
 
         const data = await dbController.insertEmailAutomation(supabase, payload, req.user.id);
@@ -38,13 +53,26 @@ export const createEmailAutomation = async (req, res) => {
             id: data.id,
             senderEmail,
             encryptedPassword,
+            logId,
+            company,
+            role
         };
 
         await sendMessageToQueue(task);
 
         const response = snakeToCamel(data);
+
+        // 2. Complete Logging (Success)
+        // if (logId) {
+        //     await completeRequestLog(supabase, logId, 'SUCCESS', 201, { email_automation_id: data.id });
+        // }
+
         res.status(201).json(response);
     } catch (error) {
+        // 3. Complete Logging (Failure)
+        if (logId) {
+            await completeRequestLog(supabase, logId, 'FAILED', 500, null, error.message);
+        }
         res.status(500).json({ error: error.message });
     }
 };

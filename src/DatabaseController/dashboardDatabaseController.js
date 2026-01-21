@@ -76,4 +76,22 @@ export const fetchDashboardRecentActivity = async (client) => {
 
     if (error) throw error;
     return data;
+    if (error) throw error;
+    return data;
+};
+
+export const fetchApiLogs = async (client, { type, limit = 100 }) => {
+    let query = client
+        .from('api_request_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (type) {
+        query = query.eq('type', type);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
 };

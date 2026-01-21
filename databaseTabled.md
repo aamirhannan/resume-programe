@@ -119,7 +119,40 @@ create table public.resume_generations (
 );
 
 -- -----------------------------------------------------------------------------
--- SECURITY POLICIES (Row Level Security)
+-- 7. API EVENT TRACKER (Map: apiRequestLogs)
+-- Single-row-per-request tracking for Major Flows (Resume, Email, Outreach).
+-- Stores the Request, Response, and a JSON log of internal steps.
+-- -----------------------------------------------------------------------------
+create table public.api_request_logs (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+
+  -- Categorization
+  type text check (type in ('EMAIL_AUTOMATION', 'RESUME_GENERATION', 'FOUNDERS_OUTREACH')) not null,
+  endpoint text not null, -- e.g. '/resume-generation/create-resume'
+  
+  -- The IO
+  request_payload jsonb,  -- What the user sent
+  response_payload jsonb, -- What we sent back (updated on completion)
+  
+  -- Status
+  status text check (status in ('PENDING', 'SUCCESS', 'FAILED')) default 'PENDING',
+  status_code int, -- HTTP Status Code (200, 500, etc.)
+  
+  -- Internal Execution History (Array of Objects)
+  -- Structure: [{ "step": "LLM", "status": "DONE", "duration": 400, "details": {...} }, ...]
+  execution_logs jsonb default '[]'::jsonb,
+  
+  -- Performance / Meta
+  duration_ms int, -- Total time taken
+  error_message text, -- Top level error if failed
+  
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- -----------------------------------------------------------------------------
+-- 8. SECURITY POLICIES (Row Level Security)
 -- Ensures users can only see their own data.
 -- -----------------------------------------------------------------------------
 
@@ -129,6 +162,7 @@ alter table public.generated_resumes enable row level security;
 alter table public.email_automations enable row level security;
 alter table public.founder_outreaches enable row level security;
 alter table public.resume_generations enable row level security;
+alter table public.api_request_logs enable row level security;
 
 -- Create policy for user_settings
 create policy "Users can own settings" on public.user_settings
@@ -149,3 +183,8 @@ create policy "Users manage own founder outreaches" on public.founder_outreaches
 
 create policy "Users manage own resume generations" on public.resume_generations
   using (auth.uid() = user_id);
+  
+create policy "Users manage own api logs" on public.api_request_logs
+  for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
