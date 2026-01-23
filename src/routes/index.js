@@ -6,6 +6,7 @@ import masterResumeRoutes from "./masterResumeRoutes.js";
 import resumeGenerationRoutes from "./resumeGenerationRoute.js";
 import userSettingRoutes from "./userSettingRoutes.js";
 import dashboardRoutes from "./dashboardRoutes.js";
+import apiRequestLogRoutes from "./apiRequestLogRoutes.js";
 
 const router = express.Router();
 
@@ -16,5 +17,7 @@ router.use("/master-resume", masterResumeRoutes);
 router.use("/resume-generation", resumeGenerationRoutes);
 router.use("/user-setting", userSettingRoutes);
 router.use("/dashboard", dashboardRoutes);
+
+router.use("/api-request-logs", apiRequestLogRoutes);
 
 export default router;

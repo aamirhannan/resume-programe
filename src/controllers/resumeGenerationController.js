@@ -34,7 +34,7 @@ export const createResumeGeneration = async (req, res) => {
         const { role, jobDescription } = req.body;
 
         // 1. Start Logging
-        logId = await createRequestLog(supabase, req.user.id, 'RESUME_GENERATION', '/create-resume', { role, jobDescription });
+        logId = await createRequestLog(supabase, req.user.id, 'RESUME_GENERATION', '/create-resume', { role, job_description: jobDescription });
 
         if (!role) {
             throw new Error('Role is required');
@@ -57,12 +57,12 @@ export const createResumeGeneration = async (req, res) => {
         }, { supabase, logId });
 
         // Generate PDF
-        const evidenceBasedResume = await createPDF(result.evidenceBasedRefinementResult);
+        const evidenceBasedResume = await createPDF(result.finalResume);
 
         const generationData = {
             role,
             prev_resume_content: baseResume,
-            new_resume_content: result.evidenceBasedRefinementResult,
+            new_resume_content: result.finalResume,
             status: "SUCCESS",
         };
 
@@ -70,8 +70,7 @@ export const createResumeGeneration = async (req, res) => {
 
         // 3. Complete Logging (Success)
         await completeRequestLog(supabase, logId, 'SUCCESS', 200, {
-            pdf_size_bytes: evidenceBasedResume.length,
-            token_cost: result.tokenUsage?.cost
+            resume_content: result.finalResume,
         });
 
         res.set({

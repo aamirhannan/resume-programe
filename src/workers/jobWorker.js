@@ -153,7 +153,11 @@ export const startWorker = async () => {
                             logId,
                             'SUCCESS',
                             200,
-                            result,
+                            {
+                                resume_content: result.finalResume,
+                                email_subject: result.emailSubject,
+                                cover_letter: result.coverLetter
+                            },
                             duration_ms
                         );
                     }
