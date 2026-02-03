@@ -18,12 +18,14 @@ export const userAuthMiddleware = (req, res, next) => {
     const dailyLimitNumber = dailyLimit ? parseInt(dailyLimit) : 0;
     const userEmailString = userEmail ? userEmail : '';
     const appPasswordString = appPassword ? appPassword : '';
+    const planTierString = header['x-user-plan'] ? header['x-user-plan'] : 'TRIAL_TIER';
 
     req.user.blockedDomainsArray = blockedDomainsArray;
     req.user.blockedEmailsArray = blockedEmailsArray;
     req.user.dailyLimitNumber = dailyLimitNumber;
     req.user.userEmailString = userEmailString;
     req.user.appPasswordString = appPasswordString;
+    req.user.planTier = planTierString;
 
     next();
 }

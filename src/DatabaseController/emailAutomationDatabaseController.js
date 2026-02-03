@@ -43,3 +43,14 @@ export const updateEmailAutomation = async (client, automationData, userId, id) 
     if (error) throw error;
     return data;
 };
+
+export const countEmailsInTimeFrame = async (client, userId, startTime) => {
+    const { count, error } = await client
+        .from('email_automations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', startTime.toISOString());
+
+    if (error) throw error;
+    return count;
+};

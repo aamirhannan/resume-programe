@@ -16,6 +16,44 @@ create table public.user_settings (
 );
 
 -- -----------------------------------------------------------------------------
+-- UPDATE 1. USER SETTINGS
+-- Add Plan information for fast lookup during authentication/middleware
+-- -----------------------------------------------------------------------------
+-- alter table public.user_settings 
+-- add column if not exists plan_tier text check (plan_tier in ('TRIAL_TIER', 'PRO_TIER', 'PREMIUM_TIER')) default 'TRIAL_TIER',
+-- add column if not exists plan_start_date timestamptz default now(),
+-- add column if not exists plan_expiry_date timestamptz,
+-- add column if not exists is_active boolean default true;
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- 10. USER PURCHASES (New Table)
+-- A ledger of all payments/subscriptions made by the user.
+-- -----------------------------------------------------------------------------
+create table public.user_purchases (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  
+  plan_tier text not null, -- 'PRO_TIER', 'PREMIUM_TIER'
+  amount decimal(10, 2) not null,
+  currency text default 'USD',
+  
+  payment_provider text, -- 'stripe', 'razorpay', etc.
+  transaction_id text,   -- The external ID
+  status text check (status in ('PENDING', 'SUCCESS', 'FAILED')) default 'PENDING',
+  
+  purchased_at timestamptz default now(),
+  valid_until timestamptz, -- When this specific purchase expires
+  
+  created_at timestamptz default now()
+);
+
+-- RLS
+alter table public.user_purchases enable row level security;
+create policy "Users view own purchases" on public.user_purchases
+  using (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
 -- 2. MASTER RESUMES (Map: userRoleTable)
 -- The "Source of Truth" resumes (e.g., "Generic Frontend", "Generic Backend")
 -- -----------------------------------------------------------------------------

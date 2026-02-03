@@ -1,4 +1,15 @@
 
+export const insertUserSettings = async (client, settings, userId) => {
+    const { data, error } = await client
+        .from('user_settings')
+        .insert({ ...settings, user_id: userId })
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
 export const fetchUserSettings = async (client) => {
     const { data, error } = await client
         .from('user_settings')
