@@ -30,17 +30,28 @@ class EmailService {
     }
 
     async sendEmailWithAuth({ user, pass, to, subject, text, html, attachments = [] }) {
-        const transporter = await this._createTransporter(user, pass);
-        return this._send(transporter, { from: user, to, subject, text, html, attachments });
+        const tempTransporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // Use SSL
+            auth: { user, pass }
+        });
+
+        return this._send(tempTransporter, { from: user, to, subject, text, html, attachments });
     }
 
     async verifyCredentials(user, pass) {
         try {
-            const tempTransporter = await this._createTransporter(user, pass);
+            const tempTransporter = nodemailer.createTransport({
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true, // Use SSL
+                auth: { user, pass }
+            });
             await tempTransporter.verify();
             return true;
         } catch (error) {
-            console.error('SMTP Credential Check Failed:', error);
+            console.error('SMTP Credential Check Failed:', error.message);
             return false;
         }
     }

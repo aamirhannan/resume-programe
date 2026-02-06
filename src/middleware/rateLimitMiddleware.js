@@ -1,6 +1,7 @@
 
 import { getAuthenticatedClient } from '../utils/supabaseClientHelper.js';
 import * as dbController from '../DatabaseController/emailAutomationDatabaseController.js';
+import { PLAN_LIMITS, PLANS } from '../utils/utilFunctions.js';
 
 export const rateLimitMiddleware = async (req, res, next) => {
     try {
@@ -11,21 +12,21 @@ export const rateLimitMiddleware = async (req, res, next) => {
         let startTime = new Date();
 
         // 1. Determine Limits based on Plan
-        if (planTier === 'TRIAL_TIER') {
-            limit = 5;
+        if (planTier === PLANS.TRIAL_TIER) {
+            limit = PLAN_LIMITS.TRIAL_TIER;
             // Rolling 30 Days window
             startTime.setDate(startTime.getDate() - 30);
-        } else if (planTier === 'PRO_TIER') {
-            limit = 10;
+        } else if (planTier === PLANS.PRO_TIER) {
+            limit = PLAN_LIMITS.PRO_TIER;
             // Rigid Day Window: Resets at 00:00 UTC today
             startTime.setUTCHours(0, 0, 0, 0);
-        } else if (planTier === 'PREMIUM_TIER') {
-            limit = 25;
+        } else if (planTier === PLANS.PREMIUM_TIER) {
+            limit = PLAN_LIMITS.PREMIUM_TIER;
             // Rigid Day Window: Resets at 00:00 UTC today
             startTime.setUTCHours(0, 0, 0, 0);
         } else {
             // Fallback for unknown plans
-            limit = 5;
+            limit = PLAN_LIMITS.TRIAL_TIER;
             startTime.setDate(startTime.getDate() - 30);
         }
 
@@ -39,7 +40,7 @@ export const rateLimitMiddleware = async (req, res, next) => {
                 currentUsage: count,
                 limit: limit,
                 plan: planTier,
-                resetTime: planTier === 'TRIAL_TIER' ? 'Rolling 30 Days' : '00:00 UTC Tomorrow'
+                resetTime: planTier === PLANS.TRIAL_TIER ? 'Rolling 30 Days' : '00:00 UTC Tomorrow'
             });
         }
 
