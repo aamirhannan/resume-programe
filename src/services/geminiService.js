@@ -59,9 +59,7 @@ Schema:
             "links": {
                 "linkedin": "String",
                 "github": "String",
-                "leetcode": "String",
-                "portfolio": "String",
-                "twitter": "String"
+                "leetcode": "String"
             }
         }
     },
