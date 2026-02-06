@@ -28,8 +28,8 @@ class EmailService {
     async sendEmailWithAuth({ user, pass, to, subject, text, html, attachments = [] }) {
         const tempTransporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
+            port: 465,
+            secure: true, // Use SSL
             auth: { user, pass }
         });
 
@@ -40,8 +40,8 @@ class EmailService {
         try {
             const tempTransporter = nodemailer.createTransport({
                 host: 'smtp.gmail.com',
-                port: 587,
-                secure: false, // use STARTTLS
+                port: 465,
+                secure: true, // Use SSL
                 auth: { user, pass }
             });
             await tempTransporter.verify();

@@ -82,3 +82,29 @@ export const getUserPurchases = async (client, userId) => {
     if (error) throw error;
     return data;
 };
+
+export const markPurchaseAsRefunded = async (client, paymentId) => {
+    // We search by transaction_id (razorpay_payment_id) because webhook gives payment_id usually
+    const { data: purchase, error: findError } = await client
+        .from('user_purchases')
+        .select('*')
+        .eq('transaction_id', paymentId)
+        .single();
+    
+    if (findError) throw findError;
+    if (!purchase) return null;
+
+    const { data, error } = await client
+        .from('user_purchases')
+        .update({
+            status: 'REFUNDED', 
+            valid_until: new Date().toISOString(), // Expire immediately
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', purchase.id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};

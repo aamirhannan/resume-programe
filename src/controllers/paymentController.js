@@ -3,11 +3,12 @@ import razorpayInstance from '../config/razorpay.js';
 import { getAuthenticatedClient } from '../utils/supabaseClientHelper.js';
 import * as dbController from '../DatabaseController/paymentDatabaseController.js';
 import { camelToSnake, snakeToCamel } from './utils.js';
+import { PLAN_PRICES, PLANS, PLAN_LIMITS } from '../utils/utilFunctions.js';
 
-const PLAN_PRICES = {
-    PRO_TIER: 49900, // 499 INR
-    PREMIUM_TIER: 99900 // 999 INR
-};
+// const PLAN_PRICES = {
+//     PRO_TIER: 49900, // 499 INR
+//     PREMIUM_TIER: 99900 // 999 INR
+// };
 
 export const createOrder = async (req, res) => {
     try {
@@ -15,7 +16,7 @@ export const createOrder = async (req, res) => {
         const supabase = getAuthenticatedClient(req.accessToken);
         const { planType } = req.body;
 
-        if (!planType || !PLAN_PRICES[planType]) {
+        if (!planType || !PLANS[planType]) {
             return res.status(400).json({ success: false, error: "Invalid plan type. Must be PRO_TIER or PREMIUM_TIER" });
         }
 

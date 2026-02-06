@@ -27,6 +27,10 @@ import { userAuthMiddleware } from './middleware/userAuthMiddleware.js';
 
 // Middleware
 app.use(cors());
+
+import webhookRoutes from './routes/webhookRoutes.js';
+app.use('/api/webhooks', webhookRoutes);
+
 app.use(bodyParser.json());
 
 // Routes
