@@ -3,11 +3,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dns from 'dns';
+import { promisify } from 'util';
 
-// Force IPv4 to avoid IPv6 connection issues in some cloud environments (like Render)
-if (dns.setDefaultResultOrder) {
-    dns.setDefaultResultOrder('ipv4first');
-}
+const resolve4 = promisify(dns.resolve4);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,30 +30,13 @@ class EmailService {
     }
 
     async sendEmailWithAuth({ user, pass, to, subject, text, html, attachments = [] }) {
-        const tempTransporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // Use SSL
-            auth: { user, pass },
-            connectionTimeout: 10000, // 10 seconds
-            greetingTimeout: 10000,
-            socketTimeout: 10000
-        });
-
-        return this._send(tempTransporter, { from: user, to, subject, text, html, attachments });
+        const transporter = await this._createTransporter(user, pass);
+        return this._send(transporter, { from: user, to, subject, text, html, attachments });
     }
 
     async verifyCredentials(user, pass) {
         try {
-            const tempTransporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true, // Use SSL
-                auth: { user, pass },
-                connectionTimeout: 10000, // 10 seconds
-                greetingTimeout: 10000,
-                socketTimeout: 10000
-            });
+            const tempTransporter = await this._createTransporter(user, pass);
             await tempTransporter.verify();
             return true;
         } catch (error) {
@@ -74,6 +55,33 @@ class EmailService {
             console.error('Error sending email:', error);
             throw error; // Propagate error so worker knows it failed
         }
+    }
+
+    async _createTransporter(user, pass) {
+        let host = 'smtp.gmail.com';
+        try {
+            // Manually resolve to IPv4 to bypass any IPv6 routing issues on cloud providers
+            const addresses = await resolve4('smtp.gmail.com');
+            if (addresses && addresses.length > 0) {
+                host = addresses[0];
+                console.log(`Resolved smtp.gmail.com to IPv4: ${host}`);
+            }
+        } catch (err) {
+            console.warn('DNS IPv4 resolution failed, falling back to hostname:', err.message);
+        }
+
+        return nodemailer.createTransport({
+            host: host,
+            port: 465,
+            secure: true,
+            auth: { user, pass },
+            tls: {
+                servername: 'smtp.gmail.com' // Critical: Matches cert against hostname, not IP
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 10000
+        });
     }
 }
 
