@@ -3,7 +3,13 @@ export const getCompanyFromEmail = (email) => {
     return company;
 }
 
-export const PLAN_LIMITS = {
+export const PLAN_EMAIL_LIMITS = {
+    TRIAL_TIER: 5,
+    PRO_TIER: 10,
+    PREMIUM_TIER: 25
+};
+
+export const PLAN_RESUME_LIMITS = {
     TRIAL_TIER: 5,
     PRO_TIER: 10,
     PREMIUM_TIER: 25
@@ -17,6 +23,6 @@ export const PLANS = {
 
 export const PLAN_PRICES = {
     TRIAL_TIER: 0,
-    PRO_TIER: 499000,
+    PRO_TIER: 49900,
     PREMIUM_TIER: 99900
 };

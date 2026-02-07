@@ -3,12 +3,7 @@ import razorpayInstance from '../config/razorpay.js';
 import { getAuthenticatedClient } from '../utils/supabaseClientHelper.js';
 import * as dbController from '../DatabaseController/paymentDatabaseController.js';
 import { camelToSnake, snakeToCamel } from './utils.js';
-import { PLAN_PRICES, PLANS, PLAN_LIMITS } from '../utils/utilFunctions.js';
-
-// const PLAN_PRICES = {
-//     PRO_TIER: 49900, // 499 INR
-//     PREMIUM_TIER: 99900 // 999 INR
-// };
+import { PLAN_PRICES, PLANS } from '../utils/utilFunctions.js';
 
 export const createOrder = async (req, res) => {
     try {
