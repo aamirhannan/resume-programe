@@ -16,7 +16,14 @@ export const createPDF = async (resumeData) => {
         // 2. Launch Puppeteer
         const browser = await puppeteer.launch({
             headless: 'new',
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage', // Important for Docker/Render
+                '--disable-gpu'
+            ],
+            // Use installed browser or bundled one
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
         });
         const page = await browser.newPage();
 
