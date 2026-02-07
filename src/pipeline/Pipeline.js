@@ -11,8 +11,8 @@ export class Pipeline {
     }
 
     async execute(initialContext, loggerContext = {}) {
-        let context = { ...initialContext };
         const { supabase, logId } = loggerContext;
+        let context = { ...initialContext, supabase, logId };
 
         console.log('--- Starting Pipeline ---');
         for (const step of this.steps) {
