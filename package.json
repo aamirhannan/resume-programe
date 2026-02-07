@@ -6,8 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index.js",
-    "dev": "nodemon --inspect src/index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "dev": "nodemon --inspect src/index.js"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +16,7 @@
     "@aws-sdk/client-sqs": "^3.967.0",
     "@google/generative-ai": "^0.24.1",
     "@puppeteer/browsers": "^2.12.0",
+    "@sparticuz/chromium": "^143.0.4",
     "@supabase/supabase-js": "^2.90.1",
     "adm-zip": "^0.5.16",
     "axios": "^1.13.2",
@@ -33,6 +33,7 @@
     "openai": "^6.15.0",
     "pdf-parse": "^1.1.1",
     "puppeteer": "^24.34.0",
+    "puppeteer-core": "^24.37.2",
     "razorpay": "^2.9.6",
     "uuid": "^13.0.0"
   },
