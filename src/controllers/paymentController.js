@@ -3,7 +3,7 @@ import razorpayInstance from '../config/razorpay.js';
 import { getAuthenticatedClient } from '../utils/supabaseClientHelper.js';
 import * as dbController from '../DatabaseController/paymentDatabaseController.js';
 import { countEmailsInTimeFrame } from '../DatabaseController/emailAutomationDatabaseController.js';
-import { countGeneratedResumesInTimeFrame } from '../DatabaseController/generatedResumeDatabaseController.js';
+import { countGeneratedResumesInTimeFrame } from '../DatabaseController/resumeGenerationDatabaseController.js';
 import { camelToSnake, snakeToCamel } from './utils.js';
 import { PLAN_PRICES, PLANS } from '../utils/utilFunctions.js';
 
