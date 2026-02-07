@@ -1,7 +1,7 @@
 
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const { PDFParse } = require('pdf-parse');
+const pdfParse = require('pdf-parse');
 import { llmService } from '../services/llmService.js';
 import fs from 'fs';
 import { geminiService } from '../services/geminiService.js';
@@ -19,12 +19,8 @@ export const extractTextFromPdf = async (req, res) => {
         const dataBuffer = fs.readFileSync(req.file.path);
 
         try {
-            // Convert Buffer to Uint8Array for the library
-            const uint8Array = new Uint8Array(dataBuffer);
-
-            // Create instance and extract text
-            const instance = new PDFParse({ data: uint8Array });
-            const data = await instance.getText();
+            // Parse PDF data
+            const data = await pdfParse(dataBuffer);
 
             // Clean up the uploaded file
             fs.unlinkSync(req.file.path);
