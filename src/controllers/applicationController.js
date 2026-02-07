@@ -89,7 +89,7 @@ export const processApplication = async (req, res) => {
 // Worker Function: Executes the actual logic
 // Worker Function: Executes the actual logic
 export const executeApplicationPipeline = async (applicationData) => {
-    const { role, jobDescription, targetEmail, senderEmail, appPassword, logId, supabase, baseResume } = applicationData;
+    const { role, jobDescription, targetEmail, senderEmail, logId, supabase, baseResume, user_id } = applicationData;
 
     console.log(`--- Starting Pipeline for Job (Role: ${role}) ---`);
 
@@ -120,9 +120,9 @@ export const executeApplicationPipeline = async (applicationData) => {
         resume: baseResume,
         jobDescription,
         targetEmail: targetEmail,
-        appPassword: appPassword,
-        email: senderEmail, // 'email' key in context refers to Sender (User) for Nodemailer
+        email: senderEmail,
         role,
+        user_id: user_id,
         tokenUsage: { input: 0, output: 0, total: 0, cost: 0 }
     }, {
         supabase: supabase,

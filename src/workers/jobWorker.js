@@ -1,6 +1,5 @@
 import { executeApplicationPipeline } from '../controllers/applicationController.js';
 import { receiveMessagesFromQueue, deleteMessageFromQueue } from '../services/sqsService.js';
-import { decrypt } from '../utils/crypto.js';
 import { emailService } from '../services/emailService.js';
 import { supabaseAdmin } from '../config/supabaseAdmin.js';
 import { snakeToCamel } from '../controllers/utils.js';
@@ -27,7 +26,7 @@ export const startWorker = async () => {
                 const { Body, ReceiptHandle } = message;
 
                 try {
-                    const { id, encryptedPassword, senderEmail, logId, company, role, baseResume } = JSON.parse(Body);
+                    const { id, senderEmail, logId, company, role, baseResume, user_id } = JSON.parse(Body);
 
                     let duration_ms = Date.now();
 
@@ -58,54 +57,12 @@ export const startWorker = async () => {
                         continue;
                     }
 
-                    // 2. Decrypt Password
-                    let appPassword = null;
-                    try {
-                        appPassword = decrypt(encryptedPassword);
-                    } catch (e) {
-                        const failError = 'Failed to decrypt App Password. Invalid key or data.';
-                        console.error(failError);
-                        await supabaseAdmin.from('email_automations')
-                            .update({ status: 'FAILED', error: failError, updated_at: new Date() })
-                            .eq('id', id);
-                        await deleteMessageFromQueue(ReceiptHandle);
-                        if (logId) {
-                            await logStep(supabaseAdmin, logId, 'DECRYPT_PASSWORD', 'FAILED', { error: failError });
-                        }
-                        continue;
-                    }
-
-                    // 3. Verify SMTP Credentials
-                    console.log(`Verifying SMTP credentials for ${senderEmail}...`);
-                    const isCredsValid = await emailService.verifyCredentials(senderEmail, appPassword);
-
-                    if (!isCredsValid) {
-                        const errorMsg = `Invalid App Password or SMTP Error for ${senderEmail}. Aborting pipeline.`;
-                        console.error(`❌ ${errorMsg}`);
-
-                        await supabaseAdmin.from('email_automations')
-                            .update({ status: 'FAILED', error: errorMsg, updated_at: new Date() })
-                            .eq('id', id);
-
-                        await deleteMessageFromQueue(ReceiptHandle);
-                        if (logId) {
-                            await logStep(supabaseAdmin, logId, 'SMTP_VERIFY', 'FAILED', { error: errorMsg });
-                        }
-                        continue;
-                    }
-
-                    if (logId) {
-                        await logStep(supabaseAdmin, logId, 'SMTP_VERIFY', 'SUCCESS');
-                    }
-
-                    // 4. Mark IN_PROGRESS
+                    // 2. Mark IN_PROGRESS
                     await supabaseAdmin.from('email_automations')
                         .update({ status: 'IN_PROGRESS', updated_at: new Date() })
                         .eq('id', id);
 
-                    // 5. Execute Pipeline
-                    // Map snake_case DB fields to camelCase for pipeline if necessary, 
-                    // or just pass them as is. The pipeline expects: role, jobDescription, targetEmail
+                    // 3. Execute Pipeline
                     const jobDetails = snakeToCamel(job);
 
                     console.log('--- Debug: Preparing Pipeline ---');
@@ -117,9 +74,9 @@ export const startWorker = async () => {
                         jobDescription: jobDetails.jobDescription,
                         targetEmail: jobDetails.targetEmail,
                         senderEmail: senderEmail,
-                        appPassword: appPassword,
                         logId: logId,
                         supabase: supabaseAdmin,
+                        user_id: user_id || job.user_id,
                         baseResume: baseResume
                     });
 

@@ -1,9 +1,10 @@
 export const verifyUserAuthMiddlewawre = (req, res, next) => {
 
-    const { dailyLimitNumber, userEmailString, appPasswordString } = req.user;
+    const { dailyLimitNumber, userEmailString } = req.user;
 
-    if (!dailyLimitNumber || !userEmailString || !appPasswordString) {
-        return res.status(401).json({ message: 'You are not authorized to access this resource' });
+    // TODO: Ideally check for isGmailConnected here, but currently we rely on userEmailString presence
+    if (!dailyLimitNumber || !userEmailString) {
+        return res.status(401).json({ message: 'User profile incomplete for automation.' });
     }
 
     next();

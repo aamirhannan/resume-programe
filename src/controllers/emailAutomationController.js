@@ -3,7 +3,6 @@ import { getAuthenticatedClient } from '../utils/supabaseClientHelper.js';
 import * as dbController from '../DatabaseController/emailAutomationDatabaseController.js';
 import * as jobProfileDbController from '../DatabaseController/jobProfileDatabaseController.js';
 import { camelToSnake, snakeToCamel } from './utils.js';
-import { encrypt } from '../utils/crypto.js';
 import { createRequestLog, completeRequestLog, logStep } from '../services/apiRequestLogger.js';
 import { transformToApiFormat } from './jobProfileController.js';
 
@@ -42,8 +41,6 @@ export const createEmailAutomation = async (req, res) => {
         logId = await createRequestLog(supabase, req.user.id, 'EMAIL_AUTOMATION', '/create-email', payload, company, role);
 
         const senderEmail = req.user.userEmailString;
-        const appPassword = req.user.appPasswordString;
-        const encryptedPassword = encrypt(appPassword);
 
         // Check for duplicates
         const duplicates = await dbController.checkDuplicateEmailWithInTimeFrame(supabase, payload);
@@ -57,13 +54,11 @@ export const createEmailAutomation = async (req, res) => {
 
         const data = await dbController.insertEmailAutomation(supabase, payload, req.user.id);
 
-
-
         // Push the task into SQS queue
         const task = {
             id: data.id,
+            user_id: req.user.id,
             senderEmail,
-            encryptedPassword,
             logId,
             company,
             role,
@@ -73,11 +68,6 @@ export const createEmailAutomation = async (req, res) => {
         await sendMessageToQueue(task);
 
         const response = snakeToCamel(data);
-
-        // 2. Complete Logging (Success)
-        // if (logId) {
-        //     await completeRequestLog(supabase, logId, 'SUCCESS', 201, { email_automation_id: data.id });
-        // }
 
         res.status(201).json(response);
     } catch (error) {

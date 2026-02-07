@@ -1,11 +1,8 @@
 import nodemailer from 'nodemailer';
+import axios from 'axios';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dns from 'dns';
-import { promisify } from 'util';
-
-const resolve4 = promisify(dns.resolve4);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,42 +14,113 @@ class EmailService {
         // Stateless service
     }
 
-    // Removed init() as verified credentials are now required per-request
-
     async sendEmail({ from, to, subject, text, html, attachments = [] }) {
-        // ... (Keep existing implementation for backward compatibility or remove if strictly moving to dynamic)
         if (!this.transporter) {
-            // Fallback to init if missing? 
-            // Logic stays same for default env usage
+            throw new Error('Transporter not initialized');
         }
-        // ...
         return this._send(this.transporter, { from, to, subject, text, html, attachments });
     }
 
-    async sendEmailWithAuth({ user, pass, to, subject, text, html, attachments = [] }) {
-        const tempTransporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // Use SSL
-            auth: { user, pass }
-        });
+    async sendEmailWithOAuth({ user, accessToken, refreshToken, to, subject, text, attachments = [] }) {
+        console.log(`Preparing to send email via OAuth for user: ${user}`);
 
-        return this._send(tempTransporter, { from: user, to, subject, text, html, attachments });
+        // Always refresh the access token to ensure it's valid
+        let validAccessToken = accessToken;
+        let tokenRefreshed = false;
+
+        try {
+            console.log('Attempting to refresh access token...');
+            const refreshedToken = await this._refreshAccessToken(refreshToken);
+            if (refreshedToken) {
+                validAccessToken = refreshedToken;
+                tokenRefreshed = true;
+                console.log('Successfully refreshed access token from Google.');
+
+                // DEBUG: Verify who this token belongs to
+                try {
+                    const tokenInfo = await axios.get(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${validAccessToken}`);
+                    console.log('DEBUG - Token belongs to email:', tokenInfo.data.email);
+                    console.log('DEBUG - Token scopes:', tokenInfo.data.scope);
+
+                    if (user && tokenInfo.data.email && user.toLowerCase().trim() !== tokenInfo.data.email.toLowerCase().trim()) {
+                        console.error(`CRITICAL MISMATCH: Trying to send as '${user}' but token belongs to '${tokenInfo.data.email}'`);
+                    }
+                } catch (infoError) {
+                    console.warn('Could not verify token info:', infoError.message);
+                }
+            } else {
+                console.warn('Token refresh response did not contain an access_token.');
+            }
+        } catch (refreshError) {
+            console.error('FAILED to refresh token:', refreshError.message);
+            console.warn('Attempting to send with existing (potentially expired) token...');
+        }
+
+        // STRATEGY: SMTP authentication is failing (535) despite valid token.
+        // We will switch to the Gmail REST API which is more robust for OAuth tokens.
+
+        console.log('Switching to Gmail REST API for sending...');
+
+        try {
+            // 1. Create the Raw MIME message using Nodemailer (but not sending it via SMTP)
+            const streamTransporter = nodemailer.createTransport({
+                streamTransport: true,
+                newline: 'unix',
+                buffer: true
+            });
+
+            const mailOptions = {
+                from: user,
+                to: to,
+                subject: subject,
+                text: text,
+                attachments: attachments
+            };
+
+            const info = await streamTransporter.sendMail(mailOptions);
+            const rawMessage = info.message.toString('base64')
+                .replace(/\+/g, '-')
+                .replace(/\//g, '_')
+                .replace(/=+$/, '');
+
+            // 2. Send via Gmail API
+            const sendResponse = await axios.post(
+                'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+                { raw: rawMessage },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${validAccessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            console.log('Email sent via REST API! ID:', sendResponse.data.id);
+            return true;
+
+        } catch (apiError) {
+            console.error('REST API Send Failed:', apiError.response ? apiError.response.data : apiError.message);
+            throw new Error(`Gmail API Error: ${apiError.response ? JSON.stringify(apiError.response.data) : apiError.message}`);
+        }
     }
 
-    async verifyCredentials(user, pass) {
+    async _refreshAccessToken(refreshToken) {
         try {
-            const tempTransporter = nodemailer.createTransport({
-                host: 'smtp.gmail.com',
-                port: 465,
-                secure: true, // Use SSL
-                auth: { user, pass }
+            const response = await axios.post('https://oauth2.googleapis.com/token', {
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                refresh_token: refreshToken,
+                grant_type: 'refresh_token',
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             });
-            await tempTransporter.verify();
-            return true;
+
+            return response.data.access_token;
         } catch (error) {
-            console.error('SMTP Credential Check Failed:', error.message);
-            return false;
+            const errorMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+            throw new Error(`Token refresh failed: ${errorMsg}`);
         }
     }
 
@@ -64,36 +132,12 @@ class EmailService {
             return true;
         } catch (error) {
             console.error('Error sending email:', error);
-            throw error; // Propagate error so worker knows it failed
-        }
-    }
-
-    async _createTransporter(user, pass) {
-        let host = 'smtp.gmail.com';
-        try {
-            // Manually resolve to IPv4 to bypass any IPv6 routing issues on cloud providers
-            const addresses = await resolve4('smtp.gmail.com');
-            if (addresses && addresses.length > 0) {
-                host = addresses[0];
-                console.log(`Resolved smtp.gmail.com to IPv4: ${host}`);
+            // Enhanced error logging for OAuth
+            if (error.response) {
+                console.error('SMTP Response:', error.response);
             }
-        } catch (err) {
-            console.warn('DNS IPv4 resolution failed, falling back to hostname:', err.message);
+            throw error;
         }
-
-        return nodemailer.createTransport({
-            host: host,
-            port: 465,
-            secure: true,
-            auth: { user, pass },
-            tls: {
-                servername: 'smtp.gmail.com' // Critical: Matches cert against hostname, not IP
-            },
-            connectionTimeout: 10000,
-            greetingTimeout: 10000,
-            socketTimeout: 10000
-        });
     }
 }
-
 export const emailService = new EmailService();
